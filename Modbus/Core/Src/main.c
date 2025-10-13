@@ -55,47 +55,77 @@ static void MX_USART1_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+extern uint8_t Coils_Database[25];
+extern float cur_x_mm;
+extern float cur_y_mm;
 uint8_t RxData[256];
 uint8_t TxData[256];
 
+
+
+typedef struct {
+    uint8_t  frame_ready;     // Có khung dữ liệu mới
+    uint8_t  busy;            // �?ang xử lý 1 khung
+    uint8_t  error;           // Có lỗi (CRC hoặc sai địa chỉ)
+    uint16_t rx_size;         // Kích thước khung nhận được
+} ModbusStatus_t;
+volatile ModbusStatus_t modbus_flags = {0};
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
-	if (RxData[0] == SLAVE_ID)
-	{
-		switch (RxData[1]){
-		case 0x03:
-			readHoldingRegs();
-			break;
-		case 0x04:
-			readInputRegs();
-			break;
-		case 0x01:
-			readCoils();
-			break;
-		case 0x02:
-			readInputs();
-			break;
-		case 0x05:
-			writeCoil();
-			break;
-		case 0x0F:
-			writeCoils();
-			break;
-		case 0x06:
-			writeSingleReg();
-			break;
-		case 0x10:
-			writeHoldingRegs();
-			break;
-		default:
-			modbusException(ILLEGAL_FUNCTION);
-			break;
-		}
-	}
+    if (huart == &huart1)
+    {
+        // Nếu nhận được đúng Slave ID → báo có khung hợp lệ
+        if (RxData[0] == SLAVE_ID)
+        {
+            modbus_flags.frame_ready = 1;
+            modbus_flags.rx_size = Size;
+        }
+        else
+        {
+            modbus_flags.error = 1;
+        }
+    }
 
-	HAL_UARTEx_ReceiveToIdle_IT(&huart1, RxData, 256);
+    // Bật lại DMA receive (quan tr�?ng)
+    HAL_UARTEx_ReceiveToIdle_IT(&huart1, RxData, sizeof(RxData));
 }
+//void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+//{
+//	if (RxData[0] == SLAVE_ID)
+//	{
+//		switch (RxData[1]){
+//		case 0x03:
+//			readHoldingRegs();
+//			break;
+//		case 0x04:
+//			readInputRegs();
+//			break;
+//		case 0x01:
+//			readCoils();
+//			break;
+//		case 0x02:
+//			readInputs();
+//			break;
+//		case 0x05:
+//			writeCoil();
+//			break;
+//		case 0x0F:
+//			writeCoils();
+//			break;
+//		case 0x06:
+//			writeSingleReg();
+//			break;
+//		case 0x10:
+//			writeHoldingRegs();
+//			break;
+//		default:
+//			modbusException(ILLEGAL_FUNCTION);
+//			break;
+//		}
+//	}
+//
+//	HAL_UARTEx_ReceiveToIdle_IT(&huart1, RxData, 256);
+//}
 
 
 /* USER CODE END 0 */
@@ -135,13 +165,15 @@ int main(void)
   tim2_init();
   tim3_init();
   HAL_UARTEx_ReceiveToIdle_IT(&huart1, RxData, 256);
-  //exti_init();
+  Global_Timer_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_Delay(1000);
   home_all();
+  U8 On_Time = FALSE;
+  Delay_Time_Set(TID_MODBUS,DT_MODBUS);
 
   while (1)
   {
@@ -152,6 +184,69 @@ int main(void)
 //	HAL_Delay(1000);
 //	move_to_mm(0.0f, 0.0f, 400.0f);
 //	HAL_Delay(1000);
+// ===== 1�?⃣ Có khung mới? =====
+	  if (modbus_flags.frame_ready && !modbus_flags.busy)
+	  {
+		  modbus_flags.busy = 1;
+		  modbus_flags.frame_ready = 0;
+
+		  uint8_t func = RxData[1];
+
+		  switch (func)
+		  {
+			  case 0x03: readHoldingRegs(); break;
+			  case 0x04: readInputRegs(); break;
+			  case 0x01: readCoils(); break;
+			  case 0x02: readInputs(); break;
+			  case 0x05: writeCoil(); break;
+			  case 0x0F: writeCoils(); break;
+			  case 0x06: writeSingleReg(); break;
+			  case 0x10: writeHoldingRegs(); break;
+			  default:   modbusException(ILLEGAL_FUNCTION); break;
+		  }
+
+		  modbus_flags.busy = 0; // Xử lý xong
+	  }
+
+	  // ===== 2�?⃣ Có lỗi không? =====
+	  if (modbus_flags.error)
+	  {
+		  // Ví dụ: log lỗi, reset UART, v.v.
+		  modbus_flags.error = 0;
+	  }
+
+	  // ===== 3�?⃣ Các tác vụ n�?n khác =====
+	  // như đi�?u khiển motor, LED, xử lý MQTT, v.v.
+	On_Time = Delay_Time_Get(TID_MODBUS);
+	if (On_Time == TRUE)
+	{
+		uint8_t coils = Coils_Database[0];
+		if ((coils >> 3) & 0x01)  // Bit 4 = X-
+		{
+		    //move_to_mm(cur_x_mm - 50.0f, cur_y_mm, 200.0f);
+			Set_Dir_X(0);
+			X_SetFeed_mm_s(200.0f);
+			X_StartSteps(5000);
+		}
+		else if ((coils >> 4) & 0x01)  // Bit 5 = X+
+		{
+			Set_Dir_X(1);
+			X_SetFeed_mm_s(200.0f);
+			X_StartSteps(5000);
+		}
+		else if ((coils >> 5) & 0x01)  // Bit 6 = Y-
+		{
+			Set_Dir_Y(0);
+			Y_SetFeed_mm_s(200.0f);
+			Y_StartSteps(5000);
+		}
+		else if ((coils >> 6) & 0x01)  // Bit 7 = Y+
+		{
+			Set_Dir_Y(1);
+			Y_SetFeed_mm_s(200.0f);
+			Y_StartSteps(5000);
+		}
+	}
   }
   /* USER CODE END 3 */
 }
@@ -177,8 +272,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 168;
+  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLN = 336;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)

@@ -78,8 +78,11 @@ void Y_StartSteps(uint32_t steps)
 }
 
 // ================== Move position ==================
-static float cur_x_mm = 0.0f;
-static float cur_y_mm = 0.0f;
+//static float cur_x_mm = 0.0f;
+//static float cur_y_mm = 0.0f;
+
+float cur_x_mm = 0.0f;
+float cur_y_mm = 0.0f;
 
 void move_to_mm(float x_mm, float y_mm, float feed_mm_s)
 {
@@ -122,6 +125,8 @@ void move_to_mm(float x_mm, float y_mm, float feed_mm_s)
     while (x_steps_rem || y_steps_rem);
     cur_x_mm = x_mm;
     cur_y_mm = y_mm;
+//    Set_Dir_X(1);
+//    Set_Dir_Y(1);
 }
 
 void home_all(void)

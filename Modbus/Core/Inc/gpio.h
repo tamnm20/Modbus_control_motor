@@ -18,6 +18,6 @@ void exti_init(void);
 // ================== GPIO ==================
 static inline void gpio_set(GPIO_TypeDef *port, uint8_t pin) { port->BSRR = (1u << pin); }
 static inline void gpio_clr(GPIO_TypeDef *port, uint8_t pin) { port->BSRR = (1u << (pin + 16)); }
-void delay_ms(uint32_t ms);
+//void delay_ms(uint32_t ms);
 
 #endif /* INC_GPIO_H_ */

@@ -28,8 +28,8 @@ static const uint16_t Input_Registers_Database[50]={
 		45678, 46789, 47890, 41235, 42356, 43567, 40596, 49586, 48765, 41029,  // 40-49 30041-30050
 };
 
-static uint8_t Coils_Database[25]={
-		0b01001001, 0b10011100, 0b10101010, 0b01010101, 0b11001100,    // 0-39    1-40
+uint8_t Coils_Database[25]={
+		0b00000000, 0b00000000, 0b10101010, 0b01010101, 0b11001100,    // 0-39    1-40
 		0b10100011, 0b01100110, 0b10101111, 0b01100000, 0b10111100,    // 40-79   41-80
 		0b11001100, 0b01101100, 0b01010011, 0b11111111, 0b00000000,    // 80-119  81-120
 		0b01010101, 0b00111100, 0b00001111, 0b11110000, 0b10001111,    // 120-159 121-160
@@ -355,6 +355,7 @@ uint8_t writeSingleReg (void)
 	sendData(TxData, 6);  // send data... CRC will be calculated in the function itself
 	return 1;   // success
 }
+__attribute__((used))
 uint8_t writeCoil (void)
 {
 	uint16_t coilAddr = ((RxData[2]<<8) | RxData[3]);  // Coil address
