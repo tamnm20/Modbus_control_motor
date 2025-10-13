@@ -88,3 +88,163 @@ void TIM3_IRQHandler(void)
            // TIM3->CCER &= ~TIM_CCER_CC1E;
     }
 }
+
+
+
+#ifndef TIM1CLK_HZ
+#define TIM1CLK_HZ (168000000UL) /* TIM1 clock thực tế */
+#endif
+
+/* ==================== Biến toàn cục ==================== */
+tMsg_Global_Tick g_Global_Tick_Msg;
+tMsg_Time_s      ga_tCAN_Time_Msg[TID_COUNT];
+
+/* ==================== Tiện ích nội bộ ==================== */
+static inline uint8_t _timer_elapsed(U32 start, U32 delay_ms, U32 now)
+{
+    /* Kiểm tra (now - start) >= delay_ms với wrap 32-bit an toàn */
+    return (uint32_t)(now - start) >= delay_ms ? 1u : 0u;
+}
+
+/* ======================================================================
+ * Khởi tạo TIM1: 1 kHz update interrupt
+ * ====================================================================== */
+void Timer1_Init(void)
+{
+    /* Bật clock cho TIM1 (APB2) */
+    RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
+
+    /* Dừng TIM1 trước khi cấu hình */
+    TIM1->CR1 = 0;
+
+    /* Tính PSC/ARR cho 1kHz (1ms) theo giả định TIM1CLK_HZ */
+    /* Ở cấu hình mặc định F407: TIM1CLK_HZ = 168 MHz */
+    TIM1->PSC = (uint16_t)(168 - 1);   /* 167 => chia 168 */
+    TIM1->ARR = (uint16_t)(1000 - 1);  /* 999  => đếm 1000 lần */
+
+    /* Clear cờ Update và enable ngắt Update */
+    TIM1->SR   = ~(TIM_SR_UIF);
+    TIM1->DIER = TIM_DIER_UIE;
+
+    /* Generate update event để load PSC/ARR ngay */
+    TIM1->EGR = TIM_EGR_UG;
+
+    /* Bật NVIC cho TIM1 Update (TIM1_UP_TIM10_IRQn) */
+    NVIC_SetPriority(TIM1_UP_TIM10_IRQn, 5);
+    NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
+
+    /* Enable counter */
+    TIM1->CR1 |= TIM_CR1_CEN;
+}
+
+/* ======================================================================
+ * ISR: TIM1 Update (1ms/tick)
+ * - Tăng g_Global_Tick_Msg.Tick_1ms
+ * - Không cần xử lý gì thêm ở đây; logic timer mềm xử lý ở Delay_Time_Get
+ * ====================================================================== */
+void TIMER1_TickISR(void)
+{
+    g_Global_Tick_Msg.Tick_1ms++;
+}
+
+/* Weak IRQ handler: gọi sang hook TIMER1_TickISR() */
+void TIM1_UP_TIM10_IRQHandler(void)
+{
+    if (TIM1->SR & TIM_SR_UIF) {
+        TIM1->SR = (uint16_t)~TIM_SR_UIF; /* clear UIF */
+        TIMER1_TickISR();
+    }
+}
+
+/* ======================================================================
+ * Global init: clear biến + bật TIM1
+ * ====================================================================== */
+void Global_Timer_Init(void)
+{
+    for (U8 i = 0U; i < TID_COUNT; i++) {
+        ga_tCAN_Time_Msg[i].Set        = (U8)0U;
+        ga_tCAN_Time_Msg[i].Delay_Time = (U32)0U;
+        ga_tCAN_Time_Msg[i].Cur_Time   = (U32)0U;
+        ga_tCAN_Time_Msg[i].End_Time   = (U32)0U;
+    }
+
+    g_Global_Tick_Msg.Tick_1ms = 0U;
+    g_Global_Tick_Msg.Limit    = 0U;
+    g_Global_Tick_Msg.Over_Set = 0U;
+
+    Timer1_Init();
+}
+
+/* ======================================================================
+ * Busy-wait ms dựa trên Tick_1ms (không phụ thuộc HAL_Delay)
+ * ====================================================================== */
+void Wait_ms(U16 ms)
+{
+    U32 start = g_Global_Tick_Msg.Tick_1ms;
+    while ((U32)(g_Global_Tick_Msg.Tick_1ms - start) < (U32)ms) {
+        /* bận rộn: có thể chèn __WFI() nếu muốn tiết kiệm điện */
+        __NOP();
+    }
+}
+
+/* ======================================================================
+ * API “timer mềm” theo ID
+ * ====================================================================== */
+
+void Delay_Time_Expire(U8 ID)
+{
+    if (ID >= TID_COUNT) return;
+    ga_tCAN_Time_Msg[ID].Set        = (U8)0U;
+    ga_tCAN_Time_Msg[ID].Delay_Time = (U32)0U;
+    ga_tCAN_Time_Msg[ID].Cur_Time   = (U32)0U;
+    ga_tCAN_Time_Msg[ID].End_Time   = (U32)0U;
+}
+
+void Delay_Time_Set(U8 ID, U16 Delay_Time_ms)
+{
+    if (ID >= TID_COUNT) return;
+    U32 now = g_Global_Tick_Msg.Tick_1ms;
+
+    ga_tCAN_Time_Msg[ID].Cur_Time   = now;
+    ga_tCAN_Time_Msg[ID].Delay_Time = (U32)Delay_Time_ms;
+    ga_tCAN_Time_Msg[ID].Set        = TRUE;
+    ga_tCAN_Time_Msg[ID].End_Time   = now + (U32)Delay_Time_ms; /* tham khảo */
+}
+
+/* Trả về:
+ * 0: timer chưa Set
+ * 1: đã hết hạn (và tự reload lại chu kỳ)
+ * 2: đang đếm (chưa hết hạn)
+ */
+U8 Delay_Time_Get(U8 ID)
+{
+    if (ID >= TID_COUNT) return 0U;
+
+    if (ga_tCAN_Time_Msg[ID].Set != TRUE) {
+        return 0U;
+    }
+
+    U32 now   = g_Global_Tick_Msg.Tick_1ms;
+    U32 start = ga_tCAN_Time_Msg[ID].Cur_Time;
+    U32 dly   = ga_tCAN_Time_Msg[ID].Delay_Time;
+
+    if (_timer_elapsed(start, dly, now)) {
+        /* Auto-reload để giữ chu kỳ đều */
+        ga_tCAN_Time_Msg[ID].Cur_Time = now;            /* chốt lại mốc mới */
+        ga_tCAN_Time_Msg[ID].End_Time = now + dly;
+        return 1U;
+    } else {
+        return 2U;
+    }
+}
+
+U16 Get_Time(void)
+{
+    return (U16)(g_Global_Tick_Msg.Tick_1ms & 0xFFFFu);
+}
+
+U8 Get_Time_Set(U8 ID)
+{
+    if (ID >= TID_COUNT) return 0U;
+    return ga_tCAN_Time_Msg[ID].Set;
+}
