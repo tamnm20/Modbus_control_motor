@@ -5,6 +5,7 @@
  *      Author: TAMRD
  */
 
+
 #ifndef INC_MOTOR_CTR_H_
 #define INC_MOTOR_CTR_H_
 
@@ -13,17 +14,19 @@
 #include "gpio.h"
 #include "timer.h"
 
+// ===== CONFIG =====
 #define STEPS_PER_MM 100u
-#define FREQ_MAX     50000u // Hz (50 kHz)
+#define FREQ_MAX     50000u // Hz
 
-#define LEFT 1
-#define RIGHT 0
-#define FORWARD 0
-#define BACKWARD 1
-#define UP 1
-#define DOWN 0
+// ===== DIRECTION =====
+#define LEFT       1
+#define RIGHT      0
+#define FORWARD    0
+#define BACKWARD   1
+#define UP         1
+#define DOWN       0
 
-
+// ===== ENUM =====
 typedef enum {
     MOTOR_IDLE,
     MOTOR_RUN,
@@ -31,6 +34,13 @@ typedef enum {
     MOTOR_RETURN_HOME
 } MotorState_t;
 
+typedef enum {
+    AXIS_X = 0,
+    AXIS_Y,
+    AXIS_Z
+} AxisName_t;
+
+// ===== STRUCT =====
 typedef struct {
     float position;
     MotorState_t state;
@@ -46,32 +56,43 @@ typedef struct {
     ServoMotor_t Z;
 } AxisSystem_t;
 
-// -------------------------------
 extern AxisSystem_t Axis;
 
+#define Motor_SetFeed_X(feed)   Motor_SetFeed(AXIS_X, feed)
+#define Motor_SetFeed_Y(feed)   Motor_SetFeed(AXIS_Y, feed)
+#define Motor_SetFeed_Z(feed)   Motor_SetFeed(AXIS_Z, feed)
 
-static inline void Set_Dir_X(uint8_t dir)
-{
-    if (!dir)
-        gpio_set(GPIOA, 4);
-    else
-        gpio_clr(GPIOA, 4);
+#define Motor_Start_X(steps)    Motor_Start(AXIS_X, steps)
+#define Motor_Start_Y(steps)    Motor_Start(AXIS_Y, steps)
+#define Motor_Start_Z(steps)    Motor_Start(AXIS_Z, steps)
+
+// ===== INLINE DIR CONTROL =====
+static inline void Set_Dir_X(uint8_t dir) {
+    if (dir == RIGHT) gpio_set(GPIOA, 4);
+    else gpio_clr(GPIOA, 4);
 }
 
-static inline void Set_Dir_Y(uint8_t dir)
-{
-    if (!dir)
-        gpio_set(GPIOA, 3);
-    else
-        gpio_clr(GPIOA, 3);
+static inline void Set_Dir_Y(uint8_t dir) {
+    if (dir == FORWARD) gpio_set(GPIOA, 3);
+    else gpio_clr(GPIOA, 3);
 }
-void Toggle_Dir_X(void);
-void Toggle_Dir_Y(void);
-void X_SetFeed_mm_s(float feed_mm_s);
-void Y_SetFeed_mm_s(float feed_mm_s);
-void X_StartSteps(uint32_t steps);
-void Y_StartSteps(uint32_t steps);
-void move_to_mm(float x_mm, float y_mm, float feed_mm_s);
-void home_all(void);
+
+static inline void Set_Dir_Z(uint8_t dir) {
+    if (dir == DOWN) gpio_set(GPIOA, 2);
+    else gpio_clr(GPIOA, 2);
+}
+
+// ===== PROTOTYPES =====
+void Axis_Init(void);
+void Axis_Home(void);
+void Axis_Process(void);
+
+void Motor_SetFeed(AxisName_t axis, float feed_mm_s);
+void Motor_Start(AxisName_t axis, uint32_t steps);
+void Motor_Stop(AxisName_t axis);
+
+void Move_To(float x_mm, float y_mm, float feed_mm_s);
+void Home_All(void);
+void Axis_UpdateState(AxisName_t axis, uint8_t dir, float feed_mm_s, uint32_t steps);
 
 #endif /* INC_MOTOR_CTR_H_ */

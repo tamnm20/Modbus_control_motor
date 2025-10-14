@@ -171,7 +171,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_Delay(1000);
-  home_all();
+  Home_All();
   U8 On_Time = FALSE;
   Delay_Time_Set(TID_MODBUS,DT_MODBUS);
   //HAL_UARTEx_ReceiveToIdle_IT(&huart1, RxData, 256);
@@ -214,35 +214,81 @@ int main(void)
 	On_Time = Delay_Time_Get(TID_MODBUS);
 	if (On_Time == TRUE)
 	{
+//		uint8_t coils = Coils_Database[0];
+//		if ((coils >> 3) & 0x01)  // Bit 4 = X-
+//		{
+//		    //move_to_mm(cur_x_mm - 50.0f, cur_y_mm, 200.0f);
+//			Set_Dir_X(LEFT);
+//			HAL_Delay(10);
+//			Motor_SetFeed_X(200.0f);
+//			Motor_Start_X(5000);
+//		}
+//		else if ((coils >> 4) & 0x01)  // Bit 5 = X+
+//		{
+//			Set_Dir_X(RIGHT);
+//			HAL_Delay(10);
+//			Motor_SetFeed_X(200.0f);
+//			Motor_Start_X(5000);
+//		}
+//		else if ((coils >> 5) & 0x01)  // Bit 6 = Y-
+//		{
+//			Set_Dir_Y(BACKWARD);
+//			HAL_Delay(10);
+//			Motor_SetFeed_Y(200.0f);
+//			Motor_Start_Y(5000);
+//		}
+//		else if ((coils >> 6) & 0x01)  // Bit 7 = Y+
+//		{
+//			Set_Dir_Y(FORWARD);
+//			HAL_Delay(10);
+//			Motor_SetFeed_Y(200.0f);
+//			Motor_Start_Y(5000);
+//		}
 		uint8_t coils = Coils_Database[0];
-		if ((coils >> 3) & 0x01)  // Bit 4 = X-
+
+		if (Axis.X.state == MOTOR_IDLE && Axis.Y.state == MOTOR_IDLE)
 		{
-		    //move_to_mm(cur_x_mm - 50.0f, cur_y_mm, 200.0f);
-			Set_Dir_X(LEFT);
-			HAL_Delay(10);
-			X_SetFeed_mm_s(200.0f);
-			X_StartSteps(5000);
+		    if ((coils >> 3) & 0x01)  // X-
+		    {
+		    	if(!Axis.X.isHomed){
+			        Set_Dir_X(LEFT);
+			        HAL_Delay(10);
+			        Motor_SetFeed_X(200.0f);
+			        Motor_Start_X(5000);
+			        Axis_UpdateState(AXIS_X, LEFT, 200.0f, 5000);
+		    	}
+		    }
+		    else if ((coils >> 4) & 0x01)  // X+
+		    {
+		        Set_Dir_X(RIGHT);
+		        HAL_Delay(10);
+		        Motor_SetFeed_X(200.0f);
+		        Motor_Start_X(5000);
+		        Axis_UpdateState(AXIS_X, RIGHT, 200.0f, 5000);
+		    }
+		    else if ((coils >> 5) & 0x01)  // Y-
+		    {
+		    	if(!Axis.Y.isHomed){
+			        Set_Dir_Y(BACKWARD);
+			        HAL_Delay(10);
+			        Motor_SetFeed_Y(200.0f);
+			        Motor_Start_Y(5000);
+			        Axis_UpdateState(AXIS_Y, BACKWARD, 200.0f, 5000);
+		    	}
+		    }
+		    else if ((coils >> 6) & 0x01)  // Y+
+		    {
+		        Set_Dir_Y(FORWARD);
+		        HAL_Delay(10);
+		        Motor_SetFeed_Y(200.0f);
+		        Motor_Start_Y(5000);
+		        Axis_UpdateState(AXIS_Y, FORWARD, 200.0f, 5000);
+		    }
 		}
-		else if ((coils >> 4) & 0x01)  // Bit 5 = X+
+		else
 		{
-			Set_Dir_X(RIGHT);
-			HAL_Delay(10);
-			X_SetFeed_mm_s(200.0f);
-			X_StartSteps(5000);
-		}
-		else if ((coils >> 5) & 0x01)  // Bit 6 = Y-
-		{
-			Set_Dir_Y(BACKWARD);
-			HAL_Delay(10);
-			Y_SetFeed_mm_s(200.0f);
-			Y_StartSteps(5000);
-		}
-		else if ((coils >> 6) & 0x01)  // Bit 7 = Y+
-		{
-			Set_Dir_Y(FORWARD);
-			HAL_Delay(10);
-			Y_SetFeed_mm_s(200.0f);
-			Y_StartSteps(5000);
+		    // Optional: báo bận (debug hoặc gửi status qua Modbus)
+		    // printf("Motor busy or homing\n");
 		}
 	}
   }

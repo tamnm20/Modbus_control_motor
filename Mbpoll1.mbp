@@ -4,7 +4,7 @@
    <Version major="12" minor="0" patch="0" build="2450"/>
    <dpi>96</dpi>
    <WP left="0" right="733" top="0" bottom="327" ShowCmd="1" MaxPosX="-1" MaxPosY="-1" MinPosX="-1" MinPosY="-1"/>
-   <ScanRate>1000</ScanRate>
+   <ScanRate>100</ScanRate>
    <SlaveID>1</SlaveID>
    <Enable>1</Enable>
    <StopOnError>0</StopOnError>
