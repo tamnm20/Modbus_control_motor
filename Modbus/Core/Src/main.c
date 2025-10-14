@@ -61,7 +61,7 @@ extern float cur_y_mm;
 uint8_t RxData[256];
 uint8_t TxData[256];
 
-
+//extern AxisSystem_t Axis;
 
 typedef struct {
     uint8_t  frame_ready;     // Có khung dữ liệu mới
@@ -86,7 +86,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
         }
     }
 
-    // Bật lại DMA receive (quan tr�?ng)
+    // enable DMA receive
     HAL_UARTEx_ReceiveToIdle_IT(&huart1, RxData, sizeof(RxData));
 }
 //void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
@@ -174,17 +174,13 @@ int main(void)
   home_all();
   U8 On_Time = FALSE;
   Delay_Time_Set(TID_MODBUS,DT_MODBUS);
+  //HAL_UARTEx_ReceiveToIdle_IT(&huart1, RxData, 256);
 
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	move_to_mm(500.0f, 400.0f, 400.0f);
-//	HAL_Delay(1000);
-//	move_to_mm(0.0f, 0.0f, 400.0f);
-//	HAL_Delay(1000);
-// ===== 1�?⃣ Có khung mới? =====
 	  if (modbus_flags.frame_ready && !modbus_flags.busy)
 	  {
 		  modbus_flags.busy = 1;
@@ -208,15 +204,13 @@ int main(void)
 		  modbus_flags.busy = 0; // Xử lý xong
 	  }
 
-	  // ===== 2�?⃣ Có lỗi không? =====
+	  // ===== error? =====
 	  if (modbus_flags.error)
 	  {
-		  // Ví dụ: log lỗi, reset UART, v.v.
+		  //log, reset UART, v.v.
 		  modbus_flags.error = 0;
 	  }
 
-	  // ===== 3�?⃣ Các tác vụ n�?n khác =====
-	  // như đi�?u khiển motor, LED, xử lý MQTT, v.v.
 	On_Time = Delay_Time_Get(TID_MODBUS);
 	if (On_Time == TRUE)
 	{
@@ -224,25 +218,29 @@ int main(void)
 		if ((coils >> 3) & 0x01)  // Bit 4 = X-
 		{
 		    //move_to_mm(cur_x_mm - 50.0f, cur_y_mm, 200.0f);
-			Set_Dir_X(0);
+			Set_Dir_X(LEFT);
+			HAL_Delay(10);
 			X_SetFeed_mm_s(200.0f);
 			X_StartSteps(5000);
 		}
 		else if ((coils >> 4) & 0x01)  // Bit 5 = X+
 		{
-			Set_Dir_X(1);
+			Set_Dir_X(RIGHT);
+			HAL_Delay(10);
 			X_SetFeed_mm_s(200.0f);
 			X_StartSteps(5000);
 		}
 		else if ((coils >> 5) & 0x01)  // Bit 6 = Y-
 		{
-			Set_Dir_Y(0);
+			Set_Dir_Y(BACKWARD);
+			HAL_Delay(10);
 			Y_SetFeed_mm_s(200.0f);
 			Y_StartSteps(5000);
 		}
 		else if ((coils >> 6) & 0x01)  // Bit 7 = Y+
 		{
-			Set_Dir_Y(1);
+			Set_Dir_Y(FORWARD);
+			HAL_Delay(10);
 			Y_SetFeed_mm_s(200.0f);
 			Y_StartSteps(5000);
 		}
@@ -272,8 +270,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 25;
-  RCC_OscInitStruct.PLL.PLLN = 336;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)

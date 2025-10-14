@@ -74,29 +74,6 @@ void exti_init(void)
     NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
-//__attribute__((used))
-void EXTI9_5_IRQHandler(void)
-{
-    if (EXTI->PR & (1u << 5))
-    {
-        EXTI->PR = (1u << 5);
-        x_home_done = 1;
-        TIM2->CCER &= ~TIM_CCER_CC1E; // tắt output
-        TIM2->CR1  &= ~TIM_CR1_CEN;   // dừng timer
-    }
-}
-//__attribute__((used))
-void EXTI15_10_IRQHandler(void)
-{
-    if (EXTI->PR & (1u << 13))
-    {
-        EXTI->PR = (1u << 13);
-        y_home_done = 1;
-        TIM3->CCER &= ~TIM_CCER_CC1E;
-        TIM3->CR1  &= ~TIM_CR1_CEN;
-    }
-}
-
 //// ================== Delay ms ==================
 //void delay_ms(uint32_t ms)
 //{

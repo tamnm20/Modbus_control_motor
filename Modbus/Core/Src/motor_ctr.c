@@ -9,6 +9,22 @@
 #include "motor_ctr.h"
 #include "gpio.h"
 
+AxisSystem_t Axis;
+
+void Axis_Init(void)
+{
+    Axis.X = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 0, RIGHT};
+    Axis.Y = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 0, FORWARD};
+    Axis.Z = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 0, DOWN};
+}
+
+void Axis_Home(void)
+{
+    Axis.X = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 1, RIGHT};
+    Axis.Y = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 1, FORWARD};
+    Axis.Z = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 1, UP};
+}
+
 // ================== DIR ==================
 
 void Toggle_Dir_X(void)
@@ -131,24 +147,21 @@ void move_to_mm(float x_mm, float y_mm, float feed_mm_s)
 
 void home_all(void)
 {
-    x_home_done = 0;
-    y_home_done = 0;
-
+//    x_home_done = 0;
+//    y_home_done = 0;
+    Axis.X.isHomed = 0;
+    Axis.Y.isHomed = 0;
     exti_init();
 
-    // 1️⃣ Đặt hướng âm
-    Set_Dir_X(0);
-    Set_Dir_Y(0);
+    Set_Dir_X(LEFT);
+    Set_Dir_Y(BACKWARD);
 
-    // 2️⃣ Chờ 10ms cho DIR ổn định
     //delay_ms(10);
     HAL_Delay(10);
 
-    // 3️⃣ Đặt tốc độ về home
     X_SetFeed_mm_s(20.0f);
     Y_SetFeed_mm_s(20.0f);
 
-    // 4️⃣ Chạy không giới hạn
     x_steps_rem = 0xFFFFFFFF;
     y_steps_rem = 0xFFFFFFFF;
 
@@ -164,15 +177,16 @@ void home_all(void)
     TIM2->CR1  |= TIM_CR1_CEN;
     TIM3->CR1  |= TIM_CR1_CEN;
 
-    // 5️⃣ Đợi đến khi cả hai cảm biến đều báo home
-    while (!(x_home_done && y_home_done))
+    while (!(Axis.X.isHomed && Axis.X.isHomed))
     {
-        // Nếu 1 trục về trước, ISR sẽ tắt riêng trục đó
+
     }
 
-    // 6️⃣ Đặt lại tọa độ gốc
-    cur_x_mm = 0.0f;
-    cur_y_mm = 0.0f;
+//    Axis.X.position = 0.0f;
+//    Axis.Y.position = 0.0f;
+//    cur_x_mm = 0.0f;
+//    cur_y_mm = 0.0f;
+    Axis_Home();
 
     // 7️⃣ Dừng hoàn toàn Timer
     TIM2->CCER &= ~TIM_CCER_CC1E;
@@ -180,3 +194,28 @@ void home_all(void)
     TIM2->CR1  &= ~TIM_CR1_CEN;
     TIM3->CR1  &= ~TIM_CR1_CEN;
 }
+
+//__attribute__((used))
+void EXTI9_5_IRQHandler(void)
+{
+    if (EXTI->PR & (1u << 5))
+    {
+        EXTI->PR = (1u << 5);
+        //x_home_done = 1;
+        Axis.X.isHomed = 1;
+        TIM2->CCER &= ~TIM_CCER_CC1E; // tắt output
+        TIM2->CR1  &= ~TIM_CR1_CEN;   // dừng timer
+    }
+}
+//__attribute__((used))
+void EXTI15_10_IRQHandler(void)
+{
+    if (EXTI->PR & (1u << 13))
+    {
+        EXTI->PR = (1u << 13);
+        Axis.Y.isHomed = 1;
+        TIM3->CCER &= ~TIM_CCER_CC1E;
+        TIM3->CR1  &= ~TIM_CR1_CEN;
+    }
+}
+

@@ -16,10 +16,44 @@
 #define STEPS_PER_MM 100u
 #define FREQ_MAX     50000u // Hz (50 kHz)
 
+#define LEFT 1
+#define RIGHT 0
+#define FORWARD 0
+#define BACKWARD 1
+#define UP 1
+#define DOWN 0
+
+
+typedef enum {
+    MOTOR_IDLE,
+    MOTOR_RUN,
+    MOTOR_BUSY,
+    MOTOR_RETURN_HOME
+} MotorState_t;
+
+typedef struct {
+    float position;
+    MotorState_t state;
+    uint32_t pulse_freq;
+    float velocity;
+    uint8_t isHomed;
+    uint8_t direction;
+} ServoMotor_t;
+
+typedef struct {
+    ServoMotor_t X;
+    ServoMotor_t Y;
+    ServoMotor_t Z;
+} AxisSystem_t;
+
+// -------------------------------
+extern AxisSystem_t Axis;
+
+
 static inline void Set_Dir_X(uint8_t dir)
 {
     if (!dir)
-        gpio_set(GPIOA, 4);   // ✅ đổi sang PA4
+        gpio_set(GPIOA, 4);
     else
         gpio_clr(GPIOA, 4);
 }
