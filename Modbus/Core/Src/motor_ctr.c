@@ -101,7 +101,9 @@ void Motor_Start(AxisName_t axis, uint32_t steps)
     switch (axis)
     {
         case AXIS_X:
-            if (Axis.X.state != MOTOR_IDLE) return;   // ignore if busy
+            //if (Axis.X.state != MOTOR_IDLE) return;   // ignore if busy
+        	if (Axis.X.state != MOTOR_IDLE && Axis.X.state != MOTOR_RETURN_HOME)
+        	    return;
             Axis.X.state = MOTOR_BUSY;                // mark as busy
 
             x_steps_rem = steps;
@@ -112,7 +114,9 @@ void Motor_Start(AxisName_t axis, uint32_t steps)
             break;
 
         case AXIS_Y:
-            if (Axis.Y.state != MOTOR_IDLE) return;
+            //if (Axis.Y.state != MOTOR_IDLE) return;
+        	if (Axis.Y.state != MOTOR_IDLE && Axis.Y.state != MOTOR_RETURN_HOME)
+        	    return;
             Axis.Y.state = MOTOR_BUSY;
 
             y_steps_rem = steps;
@@ -252,8 +256,8 @@ void Move_To(float x_mm, float y_mm, float feed_mm_s)
 
 void Home_All(void)
 {
-//    Axis.X.state = MOTOR_RETURN_HOME;
-//    Axis.Y.state = MOTOR_RETURN_HOME;
+    Axis.X.state = MOTOR_RETURN_HOME;
+    Axis.Y.state = MOTOR_RETURN_HOME;
     Axis.X.isHomed = 0;
     Axis.Y.isHomed = 0;
 

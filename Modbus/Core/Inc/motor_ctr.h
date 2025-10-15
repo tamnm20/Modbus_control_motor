@@ -17,6 +17,7 @@
 // ===== CONFIG =====
 #define STEPS_PER_MM 100u
 #define FREQ_MAX     50000u // Hz
+#define EPS_MM 0.0005f  // float guard for zero
 
 // ===== DIRECTION =====
 #define LEFT       1
@@ -65,6 +66,14 @@ extern AxisSystem_t Axis;
 #define Motor_Start_X(steps)    Motor_Start(AXIS_X, steps)
 #define Motor_Start_Y(steps)    Motor_Start(AXIS_Y, steps)
 #define Motor_Start_Z(steps)    Motor_Start(AXIS_Z, steps)
+
+#define Axis_IsHomed_X()   (Axis.X.isHomed)
+#define Axis_IsHomed_Y()   (Axis.Y.isHomed)
+#define Axis_IsHomed_Z()   (Axis.Z.isHomed)
+
+#define Axis_IsBusy_X()    (Axis.X.state == MOTOR_BUSY)
+#define Axis_IsBusy_Y()    (Axis.Y.state == MOTOR_BUSY)
+#define Axis_IsBusy_Z()    (Axis.Z.state == MOTOR_BUSY)
 
 // ===== INLINE DIR CONTROL =====
 static inline void Set_Dir_X(uint8_t dir) {

@@ -12,7 +12,7 @@ extern uint8_t RxData[256];
 extern uint8_t TxData[256];
 extern UART_HandleTypeDef huart1;
 
-static uint16_t Holding_Registers_Database[50]={
+uint16_t Holding_Registers_Database[50]={
 		0000,  0000,  0001,  3333,  4444,  5555,  6666,  7777,  8888,  9999,   // 0-9   40001-40010
 		12345, 15432, 15535, 10234, 19876, 13579, 10293, 19827, 13456, 14567,  // 10-19 40011-40020
 		21345, 22345, 24567, 25678, 26789, 24680, 20394, 29384, 26937, 27654,  // 20-29 40021-40030
