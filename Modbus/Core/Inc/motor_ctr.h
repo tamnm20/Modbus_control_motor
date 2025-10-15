@@ -18,7 +18,9 @@
 #define STEPS_PER_MM 100u
 #define FREQ_MAX     50000u // Hz
 #define EPS_MM 0.0005f  // float guard for zero
-
+#define X_MAX_MM  500.0f
+#define Y_MAX_MM  400.0f
+#define Z_MAX_MM     100.0f
 // ===== DIRECTION =====
 #define LEFT       1
 #define RIGHT      0
@@ -77,12 +79,12 @@ extern AxisSystem_t Axis;
 
 // ===== INLINE DIR CONTROL =====
 static inline void Set_Dir_X(uint8_t dir) {
-    if (dir == RIGHT) gpio_set(GPIOA, 4);
+    if (dir != RIGHT) gpio_set(GPIOA, 4);
     else gpio_clr(GPIOA, 4);
 }
 
 static inline void Set_Dir_Y(uint8_t dir) {
-    if (dir == FORWARD) gpio_set(GPIOA, 3);
+    if (dir != FORWARD) gpio_set(GPIOA, 3);
     else gpio_clr(GPIOA, 3);
 }
 
@@ -92,7 +94,7 @@ static inline void Set_Dir_Z(uint8_t dir) {
 }
 
 // ===== PROTOTYPES =====
-void Axis_Init(void);
+void Axis_Init(uint16_t *modbus_regs);
 void Axis_Home(void);
 void Axis_Process(void);
 
@@ -103,5 +105,6 @@ void Motor_Stop(AxisName_t axis);
 void Move_To(float x_mm, float y_mm, float feed_mm_s);
 void Home_All(void);
 void Axis_UpdateState(AxisName_t axis, uint8_t dir, float feed_mm_s, uint32_t steps);
+void Axis_MoveStep(AxisName_t axis, uint8_t dir, uint32_t steps, float feed_mm_s);
 
 #endif /* INC_MOTOR_CTR_H_ */

@@ -9,13 +9,16 @@
 #include "motor_ctr.h"
 #include "gpio.h"
 
+static uint16_t *g_modbus_regs = NULL; // pointer to Modbus holding registers
+
 AxisSystem_t Axis;
 float cur_x_mm = 0.0f;
 float cur_y_mm = 0.0f;
 
 // ================== INIT ==================
-void Axis_Init(void)
+void Axis_Init(uint16_t *modbus_regs)
 {
+	g_modbus_regs = modbus_regs;
     Axis.X = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 0, RIGHT};
     Axis.Y = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 0, FORWARD};
     Axis.Z = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 0, DOWN};
@@ -314,6 +317,87 @@ void Axis_UpdateState(AxisName_t axis, uint8_t dir, float feed_mm_s, uint32_t st
 
     // End motion
     m->state = MOTOR_IDLE;
+}
+
+void Axis_MoveStep(AxisName_t axis, uint8_t dir, uint32_t steps, float feed_mm_s)
+{
+    ServoMotor_t *m = NULL;
+    float max_limit = 0.0f;
+
+    // Select axis
+    switch (axis)
+    {
+        case AXIS_X:
+            if (Axis.X.isHomed == 0 || Axis.X.state == MOTOR_BUSY) return;
+            m = &Axis.X;
+            max_limit = X_MAX_MM;
+            break;
+
+        case AXIS_Y:
+            if (Axis.Y.isHomed == 0 || Axis.Y.state == MOTOR_BUSY) return;
+            m = &Axis.Y;
+            max_limit = Y_MAX_MM;
+            break;
+
+        case AXIS_Z:
+            if (Axis.Z.isHomed == 0 || Axis.Z.state == MOTOR_BUSY) return;
+            m = &Axis.Z;
+            max_limit = Z_MAX_MM;
+            break;
+
+        default: return;
+    }
+
+    uint8_t neg = (dir == LEFT || dir == BACKWARD || dir == UP);
+
+    // Boundary check
+    if (neg && m->position <= EPS_MM) return;
+    if (!neg && m->position >= (max_limit - EPS_MM)) return;
+
+    // Trim steps if exceeding limits
+    if (neg) {
+        float mm_to_zero = m->position;
+        uint32_t max_steps = (uint32_t)floorf(mm_to_zero * STEPS_PER_MM + 0.5f);
+        if (steps > max_steps) steps = max_steps;
+        if (steps == 0) return;
+    } else {
+        float mm_to_max = max_limit - m->position;
+        uint32_t max_steps = (uint32_t)floorf(mm_to_max * STEPS_PER_MM + 0.5f);
+        if (steps > max_steps) steps = max_steps;
+        if (steps == 0) return;
+    }
+
+    // Set direction
+    if (axis == AXIS_X) Set_Dir_X(dir);
+    else if (axis == AXIS_Y) Set_Dir_Y(dir);
+    HAL_Delay(5);
+
+    // Run
+    Motor_SetFeed(axis, feed_mm_s);
+    Motor_Start(axis, steps);
+    Axis_UpdateState(axis, dir, feed_mm_s, steps);
+
+    // Update position
+    float delta_mm = (float)steps / (float)STEPS_PER_MM;
+    if (neg) {
+        m->position -= delta_mm;
+        if (m->position < 0) m->position = 0;
+    } else {
+        m->position += delta_mm;
+        if (m->position > max_limit) m->position = max_limit;
+    }
+
+    // Update Modbus register if available
+    if (g_modbus_regs != NULL)
+    {
+        switch (axis)
+        {
+            case AXIS_X: g_modbus_regs[0] = (uint16_t)m->position; break;
+            case AXIS_Y: g_modbus_regs[1] = (uint16_t)m->position; break;
+            case AXIS_Z: g_modbus_regs[2] = (uint16_t)m->position; break;
+            default: break;
+        }
+    }
 }
 
 // ================== EXTI ISR ==================

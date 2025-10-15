@@ -171,6 +171,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  Axis_Init(Holding_Registers_Database);
   HAL_Delay(1000);
   Home_All();
   U8 On_Time = FALSE;
@@ -202,7 +203,7 @@ int main(void)
 			  default:   modbusException(ILLEGAL_FUNCTION); break;
 		  }
 
-		  modbus_flags.busy = 0; // Xử lý xong
+		  modbus_flags.busy = 0; // done
 	  }
 
 	  // ===== error? =====
@@ -215,137 +216,77 @@ int main(void)
 	On_Time = Delay_Time_Get(TID_MODBUS);
 	if (On_Time == TRUE)
 	{
-//		uint8_t coils = Coils_Database[0];
-//		if ((coils >> 3) & 0x01)  // Bit 4 = X-
-//		{
-//		    //move_to_mm(cur_x_mm - 50.0f, cur_y_mm, 200.0f);
-//			Set_Dir_X(LEFT);
-//			HAL_Delay(10);
-//			Motor_SetFeed_X(200.0f);
-//			Motor_Start_X(5000);
-//		}
-//		else if ((coils >> 4) & 0x01)  // Bit 5 = X+
-//		{
-//			Set_Dir_X(RIGHT);
-//			HAL_Delay(10);
-//			Motor_SetFeed_X(200.0f);
-//			Motor_Start_X(5000);
-//		}
-//		else if ((coils >> 5) & 0x01)  // Bit 6 = Y-
-//		{
-//			Set_Dir_Y(BACKWARD);
-//			HAL_Delay(10);
-//			Motor_SetFeed_Y(200.0f);
-//			Motor_Start_Y(5000);
-//		}
-//		else if ((coils >> 6) & 0x01)  // Bit 7 = Y+
-//		{
-//			Set_Dir_Y(FORWARD);
-//			HAL_Delay(10);
-//			Motor_SetFeed_Y(200.0f);
-//			Motor_Start_Y(5000);
-//		}
-//		uint8_t coils = Coils_Database[0];
-//
-//		if (Axis.X.state == MOTOR_IDLE && Axis.Y.state == MOTOR_IDLE)
-//		{
-//		    if ((coils >> 3) & 0x01)  // X-
-//		    {
-//		    	if(!Axis.X.isHomed){
-//			        Set_Dir_X(LEFT);
-//			        HAL_Delay(10);
-//			        Motor_SetFeed_X(200.0f);
-//			        Motor_Start_X(5000);
-//			        Axis_UpdateState(AXIS_X, LEFT, 200.0f, 5000);
-//		    	}
-//		    }
-//		    else if ((coils >> 4) & 0x01)  // X+
-//		    {
-//		        Set_Dir_X(RIGHT);
-//		        HAL_Delay(10);
-//		        Motor_SetFeed_X(200.0f);
-//		        Motor_Start_X(5000);
-//		        Axis_UpdateState(AXIS_X, RIGHT, 200.0f, 5000);
-//		    }
-//		    else if ((coils >> 5) & 0x01)  // Y-
-//		    {
-//		    	if(!Axis.Y.isHomed){
-//			        Set_Dir_Y(BACKWARD);
-//			        HAL_Delay(10);
-//			        Motor_SetFeed_Y(200.0f);
-//			        Motor_Start_Y(5000);
-//			        Axis_UpdateState(AXIS_Y, BACKWARD, 200.0f, 5000);
-//		    	}
-//		    }
-//		    else if ((coils >> 6) & 0x01)  // Y+
-//		    {
-//		        Set_Dir_Y(FORWARD);
-//		        HAL_Delay(10);
-//		        Motor_SetFeed_Y(200.0f);
-//		        Motor_Start_Y(5000);
-//		        Axis_UpdateState(AXIS_Y, FORWARD, 200.0f, 5000);
-//		    }
-//		}
-//		else
-//		{
-//		    // Optional: báo bận (debug hoặc gửi status qua Modbus)
-//		    // printf("Motor busy or homing\n");
-//		}
 		uint8_t coils = Coils_Database[0];
 		uint8_t coil2 = Coils_Database[1];
 
-		// ---- X- (chỉ chạy khi pos > 0) ----
-		if ((coils >> 3) & 0x01) {
-		    if (Axis_IsHomed_X() && !Axis_IsBusy_X() && Axis.X.position > EPS_MM) {
-		        Set_Dir_X(LEFT);
-		        HAL_Delay(5);
-		        Motor_SetFeed_X(200.0f);
-		        Motor_Start_X(5000);
-		        Axis_UpdateState(AXIS_X, LEFT, 200.0f, 5000);
-		        Axis.X.position -= (5000.0f / STEPS_PER_MM);
-		        if (Axis.X.position < 0) Axis.X.position = 0; // clamp
-		    }
-		}
-		// ---- X+ ----
-		else if ((coils >> 4) & 0x01) {
-		    if (Axis_IsHomed_X() && !Axis_IsBusy_X()) {
-		        Set_Dir_X(RIGHT);
-		        HAL_Delay(5);
-		        Motor_SetFeed_X(200.0f);
-		        Motor_Start_X(5000);
-		        Axis_UpdateState(AXIS_X, RIGHT, 200.0f, 5000);
-		        Axis.X.position += (5000.0f / STEPS_PER_MM);
-		    }
-		}
-		// ---- Y- (chỉ chạy khi pos > 0) ----
-		else if ((coils >> 5) & 0x01) {
-		    if (Axis_IsHomed_Y() && !Axis_IsBusy_Y() && Axis.Y.position > EPS_MM) {
-		        Set_Dir_Y(BACKWARD);
-		        HAL_Delay(5);
-		        Motor_SetFeed_Y(200.0f);
-		        Motor_Start_Y(5000);
-		        Axis_UpdateState(AXIS_Y, BACKWARD, 200.0f, 5000);
-		        Axis.Y.position -= (5000.0f / STEPS_PER_MM);
-		        if (Axis.Y.position < 0) Axis.Y.position = 0; // clamp
-		    }
-		}
-		// ---- Y+ ----
-		else if ((coils >> 6) & 0x01) {
-		    if (Axis_IsHomed_Y() && !Axis_IsBusy_Y()) {
-		        Set_Dir_Y(FORWARD);
-		        HAL_Delay(5);
-		        Motor_SetFeed_Y(200.0f);
-		        Motor_Start_Y(5000);
-		        Axis_UpdateState(AXIS_Y, FORWARD, 200.0f, 5000);
-		        Axis.Y.position += (5000.0f / STEPS_PER_MM);
-		    }
-		}
-
+//		// ---- X- (chỉ chạy khi pos > 0) ----
+//		if ((coils >> 3) & 0x01) {
+//		    if (Axis_IsHomed_X() && !Axis_IsBusy_X() && Axis.X.position > EPS_MM) {
+//		        Set_Dir_X(LEFT);
+//		        HAL_Delay(5);
+//		        Motor_SetFeed_X(200.0f);
+//		        Motor_Start_X(5000);
+//		        Axis_UpdateState(AXIS_X, LEFT, 200.0f, 5000);
+//
+//		        Axis.X.position -= (5000.0f / STEPS_PER_MM);
+//		        if (Axis.X.position < 0) Axis.X.position = 0;  // clamp to 0
+//		        Holding_Registers_Database[0] = (uint16_t)Axis.X.position;
+//		    }
+//		}
+//
+//		// ---- X+ (giới hạn 500 mm) ----
+//		else if ((coils >> 4) & 0x01) {
+//		    if (Axis_IsHomed_X() && !Axis_IsBusy_X() && Axis.X.position < (X_MAX_MM - EPS_MM)) {
+//		        Set_Dir_X(RIGHT);
+//		        HAL_Delay(5);
+//		        Motor_SetFeed_X(200.0f);
+//		        Motor_Start_X(5000);
+//		        Axis_UpdateState(AXIS_X, RIGHT, 200.0f, 5000);
+//
+//		        Axis.X.position += (5000.0f / STEPS_PER_MM);
+//		        if (Axis.X.position > X_MAX_MM) Axis.X.position = X_MAX_MM;  // clamp to max
+//		        Holding_Registers_Database[0] = (uint16_t)Axis.X.position;
+//		    }
+//		}
+//
+//		// ---- Y- (chỉ chạy khi pos > 0) ----
+//		else if ((coils >> 5) & 0x01) {
+//		    if (Axis_IsHomed_Y() && !Axis_IsBusy_Y() && Axis.Y.position > EPS_MM) {
+//		        Set_Dir_Y(BACKWARD);
+//		        HAL_Delay(5);
+//		        Motor_SetFeed_Y(200.0f);
+//		        Motor_Start_Y(5000);
+//		        Axis_UpdateState(AXIS_Y, BACKWARD, 200.0f, 5000);
+//
+//		        Axis.Y.position -= (5000.0f / STEPS_PER_MM);
+//		        if (Axis.Y.position < 0) Axis.Y.position = 0;
+//		        Holding_Registers_Database[1] = (uint16_t)Axis.Y.position;
+//		    }
+//		}
+//
+//		// ---- Y+ (giới hạn 400 mm) ----
+//		else if ((coils >> 6) & 0x01) {
+//		    if (Axis_IsHomed_Y() && !Axis_IsBusy_Y() && Axis.Y.position < (Y_MAX_MM - EPS_MM)) {
+//		        Set_Dir_Y(FORWARD);
+//		        HAL_Delay(5);
+//		        Motor_SetFeed_Y(200.0f);
+//		        Motor_Start_Y(5000);
+//		        Axis_UpdateState(AXIS_Y, FORWARD, 200.0f, 5000);
+//
+//		        Axis.Y.position += (5000.0f / STEPS_PER_MM);
+//		        if (Axis.Y.position > Y_MAX_MM) Axis.Y.position = Y_MAX_MM;
+//		        Holding_Registers_Database[1] = (uint16_t)Axis.Y.position;
+//		    }
+//		}
+		if ((coils >> 3) & 0x01)      Axis_MoveStep(AXIS_X, LEFT,     2500, 20.0f);
+		else if ((coils >> 4) & 0x01) Axis_MoveStep(AXIS_X, RIGHT,    2500, 20.0f);
+		else if ((coils >> 5) & 0x01) Axis_MoveStep(AXIS_Y, BACKWARD, 2500, 20.0f);
+		else if ((coils >> 6) & 0x01) Axis_MoveStep(AXIS_Y, FORWARD,  2500, 20.0f);
 		if((coil2 >> 7) & 0x01){
 			Holding_Registers_Database[0]=0;
 			Holding_Registers_Database[1]=0;
 			Holding_Registers_Database[2]=0;
-			HAL_Delay(1000);
+			//HAL_Delay(1000);
 			Home_All();
 			Coils_Database[1]= Coils_Database[1] & ~(1u<<7);
 		}
@@ -375,8 +316,14 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+#ifdef Tuan_board
   RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 168;
+#endif
+#ifdef Chuc_board
+  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLN = 336;
+#endif
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
