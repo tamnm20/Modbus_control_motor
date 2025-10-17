@@ -47,9 +47,9 @@ void tim3_init(void);
 /* ---------- TIMER DELAY (ms) ---------- */
 #define DT_FRAME_VALIDE             (100U)
 #define DT_FRAME_COUNT              (500U)
-#define DT_MODBUS                   (100U)
+#define DT_MODBUS                   (1U)
 #define DT_OVERLAY_GUIDELINE        (33U)
-#define DT_DTC_WRITE                (100U)
+#define DT_DTC_WRITE                (50U)
 #define DT_DIAG_ECU_RESET           (100U)
 #define DT_FIRME_UPDATE             (30U)
 #define DT_SENSOR_RESET             (500U)

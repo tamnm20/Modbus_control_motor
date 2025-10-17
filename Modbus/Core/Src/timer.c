@@ -60,37 +60,6 @@ void tim3_init(void)
     // ❌ KHÔNG bật CC1E, KHÔNG bật CEN
 }
 
-// ================== IRQ Handler ==================
-void TIM2_IRQHandler(void)
-{
-    if (TIM2->SR & TIM_SR_UIF)
-    {
-        TIM2->SR &= ~TIM_SR_UIF;
-        if (x_steps_rem && (--x_steps_rem == 0))
-        {
-            TIM2->CCER &= ~TIM_CCER_CC1E; // tắt output
-            TIM2->CR1  &= ~TIM_CR1_CEN;   // dừng timer
-        }
-            //TIM2->CCER &= ~TIM_CCER_CC1E;
-    }
-}
-
-void TIM3_IRQHandler(void)
-{
-    if (TIM3->SR & TIM_SR_UIF)
-    {
-        TIM3->SR &= ~TIM_SR_UIF;
-        if (y_steps_rem && (--y_steps_rem == 0))
-        {
-            TIM3->CCER &= ~TIM_CCER_CC1E; // tắt output
-            TIM3->CR1  &= ~TIM_CR1_CEN;   // dừng timer
-        }
-           // TIM3->CCER &= ~TIM_CCER_CC1E;
-    }
-}
-
-
-
 #ifndef TIM1CLK_HZ
 #define TIM1CLK_HZ (168000000UL) /* TIM1 clock thực tế */
 #endif

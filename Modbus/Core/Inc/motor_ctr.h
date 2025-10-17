@@ -104,7 +104,7 @@ void Motor_Stop(AxisName_t axis);
 
 void Move_To(float x_mm, float y_mm, float feed_mm_s);
 void Home_All(void);
-void Axis_UpdateState(AxisName_t axis, uint8_t dir, float feed_mm_s, uint32_t steps);
+void Axis_UpdateState(AxisName_t axis, uint8_t dir, float feed_mm_s);
 void Axis_MoveStep(AxisName_t axis, uint8_t dir, uint32_t steps, float feed_mm_s);
 
 #endif /* INC_MOTOR_CTR_H_ */
