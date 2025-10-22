@@ -39,7 +39,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
@@ -55,38 +54,6 @@ static void MX_USART1_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-extern uint8_t Coils_Database[25];
-extern uint16_t Holding_Registers_Database[50];
-uint8_t RxData[256];
-uint8_t TxData[256];
-
-typedef struct
-{
-  uint8_t frame_ready; // Có khung dữ liệu mới
-  uint8_t busy;        // �?ang xử lý 1 khung
-  uint8_t error;       // Có lỗi (CRC hoặc sai địa chỉ)
-  uint16_t rx_size;    // Kích thước khung nhận được
-} ModbusStatus_t;
-volatile ModbusStatus_t modbus_flags = {0};
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-{
-  if (huart == &huart1)
-  {
-    // Nếu nhận được đúng Slave ID → báo có khung hợp lệ
-    if (RxData[0] == SLAVE_ID)
-    {
-      modbus_flags.frame_ready = 1;
-      modbus_flags.rx_size = Size;
-    }
-    else
-    {
-      modbus_flags.error = 1;
-    }
-  }
-
-  // enable DMA receive
-  HAL_UARTEx_ReceiveToIdle_IT(&huart1, RxData, sizeof(RxData));
-}
 /* USER CODE END 0 */
 /**
  * @brief  The application entry point.
@@ -122,97 +89,31 @@ int main(void)
   io_init();
   tim2_init();
   tim3_init();
-  HAL_UARTEx_ReceiveToIdle_IT(&huart1, RxData, sizeof(RxData));
   Global_Timer_Init();
+  Modbus_TaskInit(&huart1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   Axis_Init(Holding_Registers_Database);
   HAL_Delay(1000);
-  //Home_All();
-  Axis_Home();
-  U8 On_Time = FALSE;
-  Delay_Time_Set(TID_MODBUS, DT_MODBUS);
+  Home_All();
+  //Axis_Home();
+//  U8 On_Time = FALSE;
+//  Delay_Time_Set(TID_MODBUS, DT_MODBUS);
 
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-    if (modbus_flags.frame_ready && !modbus_flags.busy)
-    {
-      modbus_flags.busy = 1;
-      modbus_flags.frame_ready = 0;
-
-      uint8_t func = RxData[1];
-
-      switch (func)
-      {
-      case 0x03:
-        readHoldingRegs();
-        break;
-      case 0x04:
-        readInputRegs();
-        break;
-      case 0x01:
-        readCoils();
-        break;
-      case 0x02:
-        readInputs();
-        break;
-      case 0x05:
-        writeCoil();
-        break;
-      case 0x0F:
-        writeCoils();
-        break;
-      case 0x06:
-        writeSingleReg();
-        break;
-      case 0x10:
-        writeHoldingRegs();
-        break;
-      default:
-        modbusException(ILLEGAL_FUNCTION);
-        break;
-      }
-
-      // ===== error? =====
-      if (modbus_flags.error)
-      {
-        // log, reset UART, v.v.
-        modbus_flags.error = 0;
-      }
-    }
-    On_Time = Delay_Time_Get(TID_MODBUS);
-    if (On_Time == TRUE)
-    {
-      uint8_t coils = Coils_Database[0];
-      uint8_t coil2 = Coils_Database[1];
-      if ((coils >> 3) & 0x01)
-        Axis_MoveStep(AXIS_X, LEFT, 1000, 20.0f);
-      else if ((coils >> 4) & 0x01)
-        Axis_MoveStep(AXIS_X, RIGHT, 1000, 20.0f);
-      else if ((coils >> 5) & 0x01)
-        Axis_MoveStep(AXIS_Y, BACKWARD, 1000, 20.0f);
-      else if ((coils >> 6) & 0x01)
-        Axis_MoveStep(AXIS_Y, FORWARD, 1000, 20.0f);
-      if ((coil2 >> 7) & 0x01)
-      {
-        Holding_Registers_Database[0] = 0;
-        Holding_Registers_Database[1] = 0;
-        Holding_Registers_Database[2] = 0;
-        Move_To(0, 0, 20.0f);
-        Coils_Database[1] = Coils_Database[1] & ~(1u << 7);
-      }
-      else if((coils >> 2) & 0x01){
-    	  Move_To(Holding_Registers_Database[0], Holding_Registers_Database[1], 50.0f);
-    	  Coils_Database[0]=0;
-      }
-      modbus_flags.busy = 0; // done
-    }
+//    On_Time = Delay_Time_Get(TID_MODBUS);
+//    if (On_Time == TRUE)
+//    {
+//    	Modbus_TaskUpdate();
+//    }
+//	  if (Task_RunEvery(1))  Modbus_TaskUpdate();   // 10 ms
+    Modbus_TaskUpdate();
   }
   /* USER CODE END 3 */
 }
@@ -295,7 +196,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-
+  //HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
   /* USER CODE END USART1_Init 2 */
 }
 
@@ -330,7 +231,6 @@ void TIM2_IRQHandler(void)
 //            TIM2->CR1  &= ~TIM_CR1_CEN;   // dừng timer
             Motor_Stop(AXIS_X);
         }
-            //TIM2->CCER &= ~TIM_CCER_CC1E;
     }
 }
 
@@ -345,7 +245,6 @@ void TIM3_IRQHandler(void)
 //            TIM3->CR1  &= ~TIM_CR1_CEN;   // dừng timer
             Motor_Stop(AXIS_Y);
         }
-           // TIM3->CCER &= ~TIM_CCER_CC1E;
     }
 }
 /* USER CODE END 4 */

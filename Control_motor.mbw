@@ -5,7 +5,7 @@
    <dpi>96</dpi>
    <Connection>
       <Connection>0</Connection>
-      <Port>23</Port>
+      <Port>21</Port>
       <BaudRate>115200</BaudRate>
       <DataBits>8</DataBits>
       <Parity>0</Parity>
@@ -28,7 +28,7 @@
       <IPv6>0</IPv6>
       <PortOpen>0</PortOpen>
    </Connection>
-   <WP left="-1019" right="-217" top="54" bottom="903" ShowCmd="1" MaxPosX="-1" MaxPosY="-1" MinPosX="-32000" MinPosY="-32000"/>
+   <WP left="-1484" right="-682" top="65" bottom="914" ShowCmd="1" MaxPosX="-1" MaxPosY="-1" MinPosX="-1" MinPosY="-1"/>
    <ChartData Action="0" xAxisMax="100" yAxisLeftMin="0" yAxisLeftMax="100" yAxisRightMin="0" yAxisRightMax="100" LegendPosition="0" ShowLegend="0" TimeUnit="0" ChartTitle="" ChartTitleVisible="0" WhiteBackGround="0"/>
    <Series>
       <Serie rightAxis="0" offset="0" color_r="0" color_g="255" color_b="0" name=""/>
@@ -51,7 +51,7 @@
       </Document>
       <Document>
          <FilePath>Mbpoll2.mbp</FilePath>
-         <WP left="17" right="680" top="334" bottom="725" ShowCmd="1" MaxPosX="-1" MaxPosY="-1" MinPosX="-1" MinPosY="-1"/>
+         <WP left="17" right="680" top="334" bottom="725" ShowCmd="1" MaxPosX="-8" MaxPosY="-31" MinPosX="-1" MinPosY="-1"/>
       </Document>
    </Documents>
 </ModbusPoll>

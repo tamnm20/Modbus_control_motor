@@ -30,7 +30,8 @@ void Axis_Home(void)
     Axis.Z.position = 0.0f;
     Axis.X.isHomed = Axis.Y.isHomed = Axis.Z.isHomed = 1;
 }
-
+//f_PWM = TIMCLK / ((PSC+1)·(ARR+1))
+//Duty (%) ≈ (CCR1 / (ARR+1)) · 100
 // ================== MOTOR FEEDRATE ==================
 void Motor_SetFeed(AxisName_t axis, float feed_mm_s)
 {

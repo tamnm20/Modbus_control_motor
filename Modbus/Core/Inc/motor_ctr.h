@@ -19,7 +19,7 @@
 #define FREQ_MAX     50000u // Hz
 #define EPS_MM 0.0005f  // float guard for zero
 #define X_MAX_MM  500.0f
-#define Y_MAX_MM  400.0f
+#define Y_MAX_MM  250.0f
 #define Z_MAX_MM     100.0f
 // ===== DIRECTION =====
 #define LEFT       1

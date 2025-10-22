@@ -33,6 +33,7 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "modbusSlave.h"
 #include "motor_ctr.h"
+#include "modbus_task.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

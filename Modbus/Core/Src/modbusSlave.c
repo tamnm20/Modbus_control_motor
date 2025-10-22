@@ -7,10 +7,7 @@
 
 #include "modbusSlave.h"
 #include "string.h"
-
-extern uint8_t RxData[256];
-extern uint8_t TxData[256];
-extern UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart1;
 
 uint16_t Holding_Registers_Database[50]={
 		0000,  0000,  0001,  3333,  4444,  5555,  6666,  7777,  8888,  9999,   // 0-9   40001-40010
