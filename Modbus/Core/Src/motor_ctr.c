@@ -67,8 +67,6 @@ void Motor_SetFeed(AxisName_t axis, float feed_mm_s)
 }
 
 // ================== MOTOR START ==================
-extern volatile uint32_t x_steps_rem;
-extern volatile uint32_t y_steps_rem;
 
 void Motor_Start(AxisName_t axis, uint32_t steps)
 {

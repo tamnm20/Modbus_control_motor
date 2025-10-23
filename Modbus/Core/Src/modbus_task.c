@@ -8,19 +8,17 @@
 #include "modbus_task.h"
 #include "modbusSlave.h"
 #include "motor_ctr.h"
-//#include "axis_task.h"
+#include "axis_task.h"
 
-//extern uint8_t RxData[256];
-//extern uint8_t TxData[256];
-uint8_t RxData[256];
-uint8_t TxData[256];
+uint8_t RxData[BUFF_SIZE];
+uint8_t TxData[BUFF_SIZE];
 volatile ModbusStatus_t modbus_flags = {0};
 UART_HandleTypeDef *modbus_uart;
 
 void Modbus_TaskInit(UART_HandleTypeDef *huart)
 {
     modbus_uart = huart;
-    HAL_UARTEx_ReceiveToIdle_IT(modbus_uart, RxData, 256);
+    HAL_UARTEx_ReceiveToIdle_IT(modbus_uart, RxData, sizeof(RxData));
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
@@ -63,58 +61,33 @@ void Modbus_TaskUpdate(void)
     uint8_t coils = Coils_Database[0];
     uint8_t coil2 = Coils_Database[1];
 
-//    if ((coils >> 3) & 1) Axis_QueueCommand(AXIS_X, LEFT,  100, 20.0f);
-//    if ((coils >> 4) & 1) Axis_QueueCommand(AXIS_X, RIGHT, 100, 20.0f);
-//    if ((coils >> 5) & 1) Axis_QueueCommand(AXIS_Y, BACKWARD, 100, 20.0f);
-//    if ((coils >> 6) & 1) Axis_QueueCommand(AXIS_Y, FORWARD, 100, 20.0f);
-//
-//    if ((coil2 >> 7) & 1)
-//    {
-//        Coils_Database[1] &= ~(1 << 7);
-//        Axis_QueueHomeAll();
-//    }
-//    else if ((coils >> 2) & 1)
-//    {
-//        Coils_Database[0] = 0;
-//        Axis_QueueMoveTo(
-//            Holding_Registers_Database[0],
-//            Holding_Registers_Database[1],
-//            50.0f);
-//    }
 #if   (STEPS_PER_MM == 1000u)
-    if ((coils >> 3) & 0x01)
-      Axis_MoveStep(AXIS_X, LEFT, 100, 2.0f);
-    else if ((coils >> 4) & 0x01)
-      Axis_MoveStep(AXIS_X, RIGHT, 100, 2.0f);
-    else if ((coils >> 5) & 0x01)
-      Axis_MoveStep(AXIS_Y, BACKWARD, 100, 2.0f);
-    else if ((coils >> 6) & 0x01)
-      Axis_MoveStep(AXIS_Y, FORWARD, 100, 2.0f);
+    if ((coils >> 3) & 1) Axis_QueueCommand(AXIS_X, LEFT,  100, 2.0f);
+    if ((coils >> 4) & 1) Axis_QueueCommand(AXIS_X, RIGHT, 100, 2.0f);
+    if ((coils >> 5) & 1) Axis_QueueCommand(AXIS_Y, BACKWARD, 100, 2.0f);
+    if ((coils >> 6) & 1) Axis_QueueCommand(AXIS_Y, FORWARD, 100, 2.0f);
 #elif (STEPS_PER_MM == 100u)
-    if ((coils >> 3) & 0x01)
-      Axis_MoveStep(AXIS_X, LEFT, 100, 20.0f);
-    else if ((coils >> 4) & 0x01)
-      Axis_MoveStep(AXIS_X, RIGHT, 100, 20.0f);
-    else if ((coils >> 5) & 0x01)
-      Axis_MoveStep(AXIS_Y, BACKWARD, 100, 20.0f);
-    else if ((coils >> 6) & 0x01)
-      Axis_MoveStep(AXIS_Y, FORWARD, 100, 20.0f);
+    if ((coils >> 3) & 1) Axis_QueueCommand(AXIS_X, LEFT,  100, 50.0f);
+    if ((coils >> 4) & 1) Axis_QueueCommand(AXIS_X, RIGHT, 100, 50.0f);
+    if ((coils >> 5) & 1) Axis_QueueCommand(AXIS_Y, BACKWARD, 100, 50.0f);
+    if ((coils >> 6) & 1) Axis_QueueCommand(AXIS_Y, FORWARD, 100, 50.0f);
 #else
   #error "STEPS_PER_MM is 1000u or 100u"
 #endif
-    if ((coil2 >> 7) & 0x01)
+    if ((coil2 >> 7) & 1)
     {
-      Holding_Registers_Database[0] = 0;
-      Holding_Registers_Database[1] = 0;
-      Holding_Registers_Database[2] = 0;
-      Move_To(0, 0, 20.0f);
-      Coils_Database[1] = Coils_Database[1] & ~(1u << 7);
+        Coils_Database[1] &= ~(1 << 7);
+        Axis_QueueHomeAll();
     }
-    else if((coils >> 2) & 0x01){
-  	  Move_To(Holding_Registers_Database[0], Holding_Registers_Database[1], 50.0f);
-  	  Coils_Database[0]=0;
+    else if ((coils >> 2) & 1)
+    {
+        Coils_Database[0] = 0;
+        Axis_QueueMoveTo(
+            Holding_Registers_Database[0],
+            Holding_Registers_Database[1],
+            200.0f);
     }
-
     modbus_flags.busy = 0;
+    Axis_TaskUpdate();
 }
 

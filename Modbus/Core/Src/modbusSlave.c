@@ -161,7 +161,7 @@ uint8_t readCoils (void)
 
 
 	//reset TxData buffer
-	memset (TxData, '\0', 256);
+	memset (TxData, '\0', sizeof(TxData));
 
 	// Prepare TxData buffer
 
@@ -227,7 +227,7 @@ uint8_t readInputs (void)
 
 
 	//reset TxData buffer
-	memset (TxData, '\0', 256);
+	memset (TxData, '\0', sizeof(TxData));
 
 	// Prepare TxData buffer
 

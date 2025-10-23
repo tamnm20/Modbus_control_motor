@@ -60,6 +60,8 @@ typedef struct {
 } AxisSystem_t;
 
 extern AxisSystem_t Axis;
+extern volatile uint32_t x_steps_rem;
+extern volatile uint32_t y_steps_rem;
 
 #define Motor_SetFeed_X(feed)   Motor_SetFeed(AXIS_X, feed)
 #define Motor_SetFeed_Y(feed)   Motor_SetFeed(AXIS_Y, feed)

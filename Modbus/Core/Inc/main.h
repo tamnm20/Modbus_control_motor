@@ -34,6 +34,7 @@ extern "C" {
 #include "modbusSlave.h"
 #include "motor_ctr.h"
 #include "modbus_task.h"
+#include "axis_task.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

@@ -16,11 +16,13 @@
 #define ILLEGAL_FUNCTION       0x01
 #define ILLEGAL_DATA_ADDRESS   0x02
 #define ILLEGAL_DATA_VALUE     0x03
+#define BUFF_SIZE 16
 
 extern uint8_t Coils_Database[25];
 extern uint16_t Holding_Registers_Database[50];
-extern uint8_t RxData[256];
-extern uint8_t TxData[256];
+
+extern uint8_t RxData[BUFF_SIZE];
+extern uint8_t TxData[BUFF_SIZE];
 extern UART_HandleTypeDef huart1;
 
 uint8_t readHoldingRegs (void);

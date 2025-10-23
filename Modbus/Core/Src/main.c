@@ -48,6 +48,7 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
+int x=0;
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -99,21 +100,13 @@ int main(void)
   HAL_Delay(1000);
   Home_All();
   //Axis_Home();
-//  U8 On_Time = FALSE;
-//  Delay_Time_Set(TID_MODBUS, DT_MODBUS);
-
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//    On_Time = Delay_Time_Get(TID_MODBUS);
-//    if (On_Time == TRUE)
-//    {
-//    	Modbus_TaskUpdate();
-//    }
-//	  if (Task_RunEvery(1))  Modbus_TaskUpdate();   // 10 ms
-    Modbus_TaskUpdate();
+	  if (Task_RunEvery(1))  Modbus_TaskUpdate();   // 10 ms
+	  if (Task_RunEvery(1000))  x++;   // 10 ms
   }
   /* USER CODE END 3 */
 }
