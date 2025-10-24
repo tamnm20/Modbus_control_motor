@@ -145,7 +145,7 @@ void Move_To(float x_mm, float y_mm, float feed_mm_s)
     Set_Dir_Y(dir_y);
     Axis.X.direction = dir_x;
     Axis.Y.direction = dir_y;
-    HAL_Delay(5);
+    HAL_Delay(1);
 
     // Calculate total time
     float dist_mm = sqrtf((float)(nx*nx + ny*ny)) / STEPS_PER_MM;
@@ -322,7 +322,7 @@ void Axis_MoveStep(AxisName_t axis, uint8_t dir, uint32_t steps, float feed_mm_s
     // Set direction
     if (axis == AXIS_X) Set_Dir_X(dir);
     else if (axis == AXIS_Y) Set_Dir_Y(dir);
-    HAL_Delay(5);
+    HAL_Delay(1);
 
     // Run
     Motor_SetFeed(axis, feed_mm_s);

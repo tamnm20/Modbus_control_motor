@@ -66,11 +66,11 @@ void Modbus_TaskUpdate(void)
     if ((coils >> 4) & 1) Axis_QueueCommand(AXIS_X, RIGHT, 100, 2.0f);
     if ((coils >> 5) & 1) Axis_QueueCommand(AXIS_Y, BACKWARD, 100, 2.0f);
     if ((coils >> 6) & 1) Axis_QueueCommand(AXIS_Y, FORWARD, 100, 2.0f);
-#elif (STEPS_PER_MM == 100u)
-    if ((coils >> 3) & 1) Axis_QueueCommand(AXIS_X, LEFT,  100, 50.0f);
-    if ((coils >> 4) & 1) Axis_QueueCommand(AXIS_X, RIGHT, 100, 50.0f);
-    if ((coils >> 5) & 1) Axis_QueueCommand(AXIS_Y, BACKWARD, 100, 50.0f);
-    if ((coils >> 6) & 1) Axis_QueueCommand(AXIS_Y, FORWARD, 100, 50.0f);
+#elif (STEPS_PER_MM == 1u)
+    if ((coils >> 3) & 1) Axis_QueueCommand(AXIS_X, LEFT,  10, 5000.0f);
+    if ((coils >> 4) & 1) Axis_QueueCommand(AXIS_X, RIGHT, 10, 5000.0f);
+    if ((coils >> 5) & 1) Axis_QueueCommand(AXIS_Y, BACKWARD, 10, 5000.0f);
+    if ((coils >> 6) & 1) Axis_QueueCommand(AXIS_Y, FORWARD, 10, 5000.0f);
 #else
   #error "STEPS_PER_MM is 1000u or 100u"
 #endif
@@ -85,9 +85,8 @@ void Modbus_TaskUpdate(void)
         Axis_QueueMoveTo(
             Holding_Registers_Database[0],
             Holding_Registers_Database[1],
-            200.0f);
+            50000.0f);
     }
     modbus_flags.busy = 0;
-    Axis_TaskUpdate();
 }
 

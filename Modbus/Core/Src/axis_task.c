@@ -11,7 +11,7 @@
 #include "modbusSlave.h"
 #include "math.h"
 
-#define CMD_QUEUE_SIZE 10
+#define CMD_QUEUE_SIZE 100
 
 typedef struct {
     AxisCmdType_t type;
@@ -74,26 +74,7 @@ void Axis_QueueHomeAll(void)
 /* Xử lý tuần tự từng lệnh */
 void Axis_TaskUpdate(void)
 {
-//    if (Axis.X.state == MOTOR_BUSY || Axis.Y.state == MOTOR_BUSY) return;
-//    if (head == tail) return;
-//
-//    AxisCommand_t *cmd = &queue[tail];
-//    tail = (tail + 1) % CMD_QUEUE_SIZE;
-//
-//    switch (cmd->type)
-//    {
-//    case CMD_MOVE_STEP:
-//        Axis_MoveStep(cmd->axis, cmd->dir, cmd->steps, cmd->feed);
-//        break;
-//    case CMD_MOVE_TO:
-//        Move_To(cmd->x, cmd->y, cmd->feed);
-//        break;
-//    case CMD_HOME_ALL:
-//        Home_All();
-//        break;
-//    default: break;
-//    }
-    Move_To_Task();   // <--- thêm dòng này
+    Move_To_Task();
 
     if (Axis.X.state == MOTOR_BUSY || Axis.Y.state == MOTOR_BUSY)
         return;
@@ -111,12 +92,12 @@ void Axis_TaskUpdate(void)
         break;
 
     case CMD_MOVE_TO:
-        Move_To_Start(cmd->x, cmd->y, cmd->feed);   // <--- gọi hàm mới
+        Move_To_Start(cmd->x, cmd->y, cmd->feed);
         break;
 
     case CMD_HOME_ALL:
         //Home_All();
-    	Move_To_Start(0, 0, 100.0f);
+    	Move_To_Start(0, 0, 10000.0f);
         break;
     }
 }
@@ -124,7 +105,7 @@ void Axis_TaskUpdate(void)
 void Move_To_Start(float x_mm, float y_mm, float feed_mm_s)
 {
     if (Axis.X.state == MOTOR_BUSY || Axis.Y.state == MOTOR_BUSY)
-        return; // đang bận, bỏ qua
+        return;
 
     int32_t dx_steps = lroundf((x_mm - Axis.X.position) * STEPS_PER_MM);
     int32_t dy_steps = lroundf((y_mm - Axis.Y.position) * STEPS_PER_MM);
@@ -140,7 +121,7 @@ void Move_To_Start(float x_mm, float y_mm, float feed_mm_s)
     Set_Dir_Y(dir_y);
     Axis.X.direction = dir_x;
     Axis.Y.direction = dir_y;
-    HAL_Delay(2);
+    HAL_Delay(1);
 
     // --- Tính toán tốc độ ---
     float dist_mm = sqrtf((float)(nx*nx + ny*ny)) / STEPS_PER_MM;

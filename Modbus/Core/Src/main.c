@@ -48,9 +48,26 @@
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
-int x=0;
+volatile int x=0;
 /* USER CODE BEGIN PFP */
+/* === Callback người dùng định nghĩa === */
+void Timer6_Callback_1ms(void)
+{
+	x++;
+	  Axis_TaskUpdate();
+//    static uint8_t modbus_cnt = 0;
 
+//    // gọi Modbus_TaskUpdate() mỗi 10 ms
+//    if (++modbus_cnt >= 10)
+//    {
+//        modbus_cnt = 0;
+//        Modbus_TaskUpdate();
+//    }
+    //Modbus_TaskUpdate();
+    // nếu bạn muốn thêm task khác, có thể thêm ở đây
+    // ví dụ:
+    // if (++something >= 1000) { something = 0; blinkLED(); }
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -90,6 +107,7 @@ int main(void)
   io_init();
   tim2_init();
   tim3_init();
+  TIM6_Init_1ms();
   Global_Timer_Init();
   Modbus_TaskInit(&huart1);
   /* USER CODE END 2 */
@@ -98,15 +116,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   Axis_Init(Holding_Registers_Database);
   HAL_Delay(1000);
-  Home_All();
-  //Axis_Home();
+  //Home_All();
+  Axis_Home();
   while (1)
   {
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
-	  if (Task_RunEvery(1))  Modbus_TaskUpdate();   // 10 ms
-	  if (Task_RunEvery(1000))  x++;   // 10 ms
+	  if (Task_RunEvery(1))	  Modbus_TaskUpdate();   // 1 ms
   }
   /* USER CODE END 3 */
 }
@@ -220,8 +236,6 @@ void TIM2_IRQHandler(void)
         TIM2->SR &= ~TIM_SR_UIF;
         if (x_steps_rem && (--x_steps_rem == 0))
         {
-//            TIM2->CCER &= ~TIM_CCER_CC1E; // tắt output
-//            TIM2->CR1  &= ~TIM_CR1_CEN;   // dừng timer
             Motor_Stop(AXIS_X);
         }
     }
@@ -234,8 +248,6 @@ void TIM3_IRQHandler(void)
         TIM3->SR &= ~TIM_SR_UIF;
         if (y_steps_rem && (--y_steps_rem == 0))
         {
-//            TIM3->CCER &= ~TIM_CCER_CC1E; // tắt output
-//            TIM3->CR1  &= ~TIM_CR1_CEN;   // dừng timer
             Motor_Stop(AXIS_Y);
         }
     }

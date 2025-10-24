@@ -95,6 +95,38 @@ uint8_t Task_RunEvery(uint16_t period_ms)
 
 uint32_t millis(void) { return g_tick_ms; }
 
+void TIM6_Init_1ms(void)
+{
+    // Bật clock cho TIM6
+    RCC->APB1ENR |= RCC_APB1ENR_TIM6EN;
+
+    /*
+     * F_APB1 = 84 MHz
+     * TIM6 counter clock = 84 MHz
+     * Chọn PSC để còn 84 000 Hz → ARR = 83 -> 1 ms
+     */
+    TIM6->PSC = 84 - 1;     // 84 MHz / 84 = 1 MHz (1 tick = 1 µs)
+    TIM6->ARR = 1000 - 1;   // 1000 tick = 1 ms
+
+    TIM6->CNT = 0;
+    TIM6->SR  &= ~TIM_SR_UIF;     // clear flag
+    TIM6->DIER |= TIM_DIER_UIE;   // enable interrupt
+    TIM6->CR1  |= TIM_CR1_CEN;    // start counter
+
+    NVIC_SetPriority(TIM6_DAC_IRQn, 6);
+    NVIC_EnableIRQ(TIM6_DAC_IRQn);
+}
+
+/* === ISR TIM6 mỗi 1ms === */
+void TIM6_DAC_IRQHandler(void)
+{
+    if (TIM6->SR & TIM_SR_UIF)
+    {
+        TIM6->SR &= ~TIM_SR_UIF;
+        Timer6_Callback_1ms();
+    }
+}
+
 //#ifndef TIM1CLK_HZ
 //#define TIM1CLK_HZ (168000000UL) /* TIM1 clock thực tế */
 //#endif

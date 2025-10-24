@@ -18,6 +18,9 @@ void tim3_init(void);
 void Global_Timer_Init(void);
 uint8_t Task_RunEvery(uint16_t period_ms);
 uint32_t millis(void);
+void TIM6_Init_1ms(void);
+void TIM6_IRQHandler(void);
+void Timer6_Callback_1ms(void);  // callback do người dùng định nghĩa
 
 ///* ================= Global Define (theo ví dụ C8051) ================= */
 //
