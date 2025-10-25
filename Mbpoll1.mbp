@@ -4,7 +4,7 @@
    <Version major="12" minor="0" patch="0" build="2450"/>
    <dpi>96</dpi>
    <WP left="0" right="733" top="0" bottom="327" ShowCmd="1" MaxPosX="-1" MaxPosY="-1" MinPosX="-1" MinPosY="-1"/>
-   <ScanRate>100</ScanRate>
+   <ScanRate>50</ScanRate>
    <SlaveID>1</SlaveID>
    <Enable>1</Enable>
    <StopOnError>0</StopOnError>
@@ -13,9 +13,25 @@
    <HideNames>0</HideNames>
    <HexMode>0</HexMode>
    <DisplayAddr>0</DisplayAddr>
-   <ColCount>4</ColCount>
+   <ColCount>20</ColCount>
    <RowCount>10</RowCount>
    <ColumnWidth>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
+      <CW>900</CW>
       <CW>900</CW>
       <CW>900</CW>
       <CW>900</CW>
@@ -71,7 +87,7 @@
    <Data>
       <Function>1</Function>
       <Address>0</Address>
-      <Quantity>16</Quantity>
+      <Quantity>100</Quantity>
       <EnronMode>0</EnronMode>
       <Bytes>
          <B>0</B>
@@ -89,7 +105,91 @@
          <B>0</B>
          <B>0</B>
          <B>0</B>
+         <B>0</B>
+         <B>0</B>
          <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
+         <B>0</B>
+         <B>0</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>1</B>
+         <B>1</B>
+         <B>0</B>
+         <B>0</B>
       </Bytes>
       <CellData/>
       <ChartSeries/>

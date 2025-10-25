@@ -4,7 +4,7 @@
    <Version major="12" minor="0" patch="0" build="2450"/>
    <dpi>96</dpi>
    <WP left="17" right="680" top="334" bottom="725" ShowCmd="1" MaxPosX="-8" MaxPosY="-31" MinPosX="-1" MinPosY="-1"/>
-   <ScanRate>50</ScanRate>
+   <ScanRate>100</ScanRate>
    <SlaveID>1</SlaveID>
    <Enable>1</Enable>
    <StopOnError>0</StopOnError>
@@ -72,7 +72,7 @@
       <Quantity>10</Quantity>
       <EnronMode>0</EnronMode>
       <Formats>
-         <F f="0" v="71"/>
+         <F f="0" v="0"/>
          <F f="0" v="0"/>
          <F f="0" v="1"/>
          <F f="0" v="3333"/>
@@ -84,7 +84,7 @@
          <F f="0" v="9999"/>
       </Formats>
       <Bytes>
-         <B>71</B>
+         <B>0</B>
          <B>0</B>
          <B>0</B>
          <B>0</B>

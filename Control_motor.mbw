@@ -28,7 +28,7 @@
       <IPv6>0</IPv6>
       <PortOpen>1</PortOpen>
    </Connection>
-   <WP left="-1356" right="-554" top="95" bottom="944" ShowCmd="1" MaxPosX="-1" MaxPosY="-1" MinPosX="-1" MinPosY="-1"/>
+   <WP left="-1719" right="-917" top="83" bottom="932" ShowCmd="1" MaxPosX="-1" MaxPosY="-1" MinPosX="-1" MinPosY="-1"/>
    <ChartData Action="0" xAxisMax="100" yAxisLeftMin="0" yAxisLeftMax="100" yAxisRightMin="0" yAxisRightMax="100" LegendPosition="0" ShowLegend="0" TimeUnit="0" ChartTitle="" ChartTitleVisible="0" WhiteBackGround="0"/>
    <Series>
       <Serie rightAxis="0" offset="0" color_r="0" color_g="255" color_b="0" name=""/>

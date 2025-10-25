@@ -53,8 +53,8 @@ volatile int x=0;
 /* === Callback người dùng định nghĩa === */
 void Timer6_Callback_1ms(void)
 {
-	x++;
-	  Axis_TaskUpdate();
+	//x++;
+	  //Axis_TaskUpdate();
 //    static uint8_t modbus_cnt = 0;
 
 //    // gọi Modbus_TaskUpdate() mỗi 10 ms
@@ -107,7 +107,7 @@ int main(void)
   io_init();
   tim2_init();
   tim3_init();
-  TIM6_Init_1ms();
+  //TIM6_Init_1ms();
   Global_Timer_Init();
   Modbus_TaskInit(&huart1);
   /* USER CODE END 2 */
@@ -123,6 +123,7 @@ int main(void)
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
 	  if (Task_RunEvery(1))	  Modbus_TaskUpdate();   // 1 ms
+	  Axis_TaskUpdate();
   }
   /* USER CODE END 3 */
 }
@@ -205,7 +206,7 @@ static void MX_USART1_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART1_Init 2 */
-  //HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
   /* USER CODE END USART1_Init 2 */
 }
 
