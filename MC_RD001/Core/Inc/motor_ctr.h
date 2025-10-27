@@ -20,7 +20,7 @@
 #define EPS_MM 		0.0005f  // float guard for zero
 #define X_MAX_MM  50000.0f
 #define Y_MAX_MM  28000.0f
-#define Z_MAX_MM    100.0f
+#define Z_MAX_MM  10000.0f
 // ===== DIRECTION =====
 #define LEFT       1
 #define RIGHT      0
@@ -44,13 +44,29 @@ typedef enum {
 } AxisName_t;
 
 // ===== STRUCT =====
+//typedef struct {
+//    float position;
+//    MotorState_t state;
+//    uint32_t pulse_freq;
+//    float velocity;
+//    uint8_t isHomed;
+//    uint8_t direction;
+//} ServoMotor_t;
 typedef struct {
-    float position;
+    // Vị trí
+    float position;          // Vị trí hiện tại (cập nhật real-time)
+    float start_position;    // Vị trí lúc bắt đầu move
+    float target_position;   // Vị trí đích
+
+    // Trạng thái
     MotorState_t state;
-    uint32_t pulse_freq;
-    float velocity;
-    uint8_t isHomed;
     uint8_t direction;
+    uint8_t isHomed;
+    float velocity;
+
+    // Di chuyển hiện tại
+    uint32_t total_steps;    // Tổng steps của lệnh hiện tại
+    uint32_t pulse_freq;
 } ServoMotor_t;
 
 typedef struct {
@@ -60,6 +76,7 @@ typedef struct {
 } AxisSystem_t;
 
 extern AxisSystem_t Axis;
+
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;

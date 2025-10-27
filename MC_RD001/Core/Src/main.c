@@ -48,10 +48,12 @@ TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim8;
 TIM_HandleTypeDef htim9;
 
-UART_HandleTypeDef huart1;
+//UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-
+volatile uint8_t flag_10ms = 0;
+volatile uint8_t flag_50ms = 0;
+volatile uint8_t tick_10ms_counter = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -89,6 +91,29 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         Axis.Z.isHomed = 1;
         Motor_Stop(AXIS_Z);
     }
+}
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	if(htim == &htim6)  // Timer 10ms
+	{
+		flag_10ms = 1;
+		tick_10ms_counter++;
+
+		if(tick_10ms_counter >= 5)  // 5 x 10ms = 50ms
+		{
+			tick_10ms_counter = 0;
+			flag_50ms = 1;
+		}
+	}
+	if(htim->Instance == TIM5){
+	  Motor_Stop(AXIS_Y);
+	}
+	if(htim->Instance == TIM2){
+	  Motor_Stop(AXIS_X);
+	  }
+	if(htim->Instance == TIM9){
+	  Motor_Stop(AXIS_Z);
+	}
 }
 //#define Motor_Left 	0
 //#define Motor_Right 	1
@@ -157,26 +182,40 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);
   HAL_TIM_Base_Start_IT(&htim5);
   HAL_TIM_Base_Start_IT(&htim9);
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_Delay(1000);
   Axis_Init();
-  Home_All();
-  //Axis_Home();
+  Modbus_TaskInit(&huart1);
+  //Home_All();
+  Axis_Home();
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  Motor_SetFeed_X(10000.0f);
-	  Set_Dir_X(RIGHT);
-	  Motor_Start_X(10);
-	  Motor_SetFeed_Z(2000.0f);
-	  Set_Dir_Z(UP);
-	  Motor_Start_Z(10);
-	  HAL_Delay(1000);
+//	  Motor_SetFeed_X(10000.0f);
+//	  Set_Dir_X(RIGHT);
+//	  Motor_Start_X(10);
+//	  Motor_SetFeed_Y(10000.0f);
+//	  Set_Dir_Y(FORWARD);
+//	  Motor_Start_Y(10);
+//	  Motor_SetFeed_Z(2000.0f);
+//	  Set_Dir_Z(UP);
+//	  Motor_Start_Z(10);
+//	  HAL_Delay(1000);
+      Modbus_TaskUpdate();
+      if(flag_10ms)
+      {
+          flag_10ms = 0;
+          Axis_TaskUpdate();
+          Modbus_ExecuteCommands();
+      }
+      //Modbus_ExecuteCommands();
+      //Axis_TaskUpdate();
   }
   /* USER CODE END 3 */
 }

@@ -10,19 +10,6 @@
 
 AxisSystem_t Axis;
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  if(htim->Instance == TIM5){
-	  Motor_Stop(AXIS_Y);
-    }
-  if(htim->Instance == TIM2){
-	  Motor_Stop(AXIS_X);
-      }
-  if(htim->Instance == TIM9){
-	  Motor_Stop(AXIS_Z);
-	}
-}
-
 // ================== INIT ==================
 void Axis_Init(void)
 {
