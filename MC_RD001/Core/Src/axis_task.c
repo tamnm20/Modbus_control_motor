@@ -20,8 +20,7 @@ typedef enum {
 
 typedef struct {
     TaskState_t state;
-    float target_x, target_y;
-    float feed;
+//    float target_x, target_y;
 } MoveTask_t;
 
 static MoveTask_t task = {TASK_IDLE};
@@ -138,8 +137,8 @@ void Axis_MoveTo(float x_mm, float y_mm, float feed_mm_s)
     }
 
     task.state = TASK_MOVING;
-    task.target_x = x_mm;
-    task.target_y = y_mm;
+//    task.target_x = x_mm;
+//    task.target_y = y_mm;
 }
 
 /* ========== JOG  ========== */
@@ -342,14 +341,14 @@ void Axis_TaskUpdate(void)
         if(Axis.X.state == MOTOR_IDLE && Axis.Y.state == MOTOR_IDLE)
         {
             // Cập nhật vị trí cuối cùng của trục
-            Axis.X.position = task.target_x;
-            Axis.Y.position = task.target_y;
+            Axis.X.position = Axis.X.target_position;
+            Axis.Y.position = Axis.Y.target_position;
             Holding_Registers_Database[0] = (uint16_t)roundf(Axis.X.position);
             Holding_Registers_Database[1] = (uint16_t)roundf(Axis.Y.position);
 
-            // Đặt lại điểm cập nhật cuối
-            last_update_x = task.target_x;
-            last_update_y = task.target_y;
+//            // Đặt lại điểm cập nhật cuối
+//            last_update_x = Axis.X.target_position;
+//            last_update_y = Axis.Y.target_position;
 
             // Chuyển trạng thái nhiệm vụ về không hoạt động
             task.state = TASK_IDLE;

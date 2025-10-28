@@ -48,7 +48,7 @@ TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim8;
 TIM_HandleTypeDef htim9;
 
-//UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 volatile uint8_t flag_10ms = 0;
@@ -96,9 +96,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim == &htim6)  // Timer 10ms
 	{
+
 		flag_10ms = 1;
 		tick_10ms_counter++;
-
+        Axis_TaskUpdate();
 		if(tick_10ms_counter >= 5)  // 5 x 10ms = 50ms
 		{
 			tick_10ms_counter = 0;
@@ -211,11 +212,11 @@ int main(void)
       if(flag_10ms)
       {
           flag_10ms = 0;
-          Axis_TaskUpdate();
           Modbus_ExecuteCommands();
       }
-      //Modbus_ExecuteCommands();
-      //Axis_TaskUpdate();
+//	#ifndef DEBUG
+//		__WFI();
+//	#endif
   }
   /* USER CODE END 3 */
 }
@@ -495,7 +496,7 @@ static void MX_TIM6_Init(void)
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = 84-1;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 1000-1;
+  htim6.Init.Period = 10000-1;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
@@ -686,7 +687,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : HOME_X_Pin HOME_Y_Pin HOME_Z_Pin */
   GPIO_InitStruct.Pin = HOME_X_Pin|HOME_Y_Pin|HOME_Z_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 

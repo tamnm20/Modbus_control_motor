@@ -53,19 +53,16 @@ typedef enum {
 //    uint8_t direction;
 //} ServoMotor_t;
 typedef struct {
-    // Vị trí
-    float position;          // Vị trí hiện tại (cập nhật real-time)
-    float start_position;    // Vị trí lúc bắt đầu move
-    float target_position;   // Vị trí đích
+    float position;
+    float start_position;
+    float target_position;
 
-    // Trạng thái
     MotorState_t state;
     uint8_t direction;
     uint8_t isHomed;
-    float velocity;
+//    float velocity;
 
-    // Di chuyển hiện tại
-    uint32_t total_steps;    // Tổng steps của lệnh hiện tại
+    uint32_t total_steps;
     uint32_t pulse_freq;
 } ServoMotor_t;
 

@@ -162,19 +162,19 @@ void Home_All(void)
 }
 
 // ================== UPDATE AXIS STATE ==================
-void Axis_UpdateState(AxisName_t axis, uint8_t dir, float feed_mm_s)
-{
-    ServoMotor_t *m = NULL;
-
-    switch (axis)
-    {
-        case AXIS_X: m = &Axis.X; break;
-        case AXIS_Y: m = &Axis.Y; break;
-        case AXIS_Z: m = &Axis.Z; break;
-        default: return;
-    }
-
-    // Save parameters
-    m->direction  = dir;
-    m->velocity   = feed_mm_s;
-}
+//void Axis_UpdateState(AxisName_t axis, uint8_t dir, float feed_mm_s)
+//{
+//    ServoMotor_t *m = NULL;
+//
+//    switch (axis)
+//    {
+//        case AXIS_X: m = &Axis.X; break;
+//        case AXIS_Y: m = &Axis.Y; break;
+//        case AXIS_Z: m = &Axis.Z; break;
+//        default: return;
+//    }
+//
+//    // Save parameters
+//    m->direction  = dir;
+//    m->velocity   = feed_mm_s;
+//}
