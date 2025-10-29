@@ -48,12 +48,12 @@ TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim8;
 TIM_HandleTypeDef htim9;
 
-UART_HandleTypeDef huart1;
+//UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
+volatile uint8_t flag_1ms = 0;
 volatile uint8_t flag_10ms = 0;
-volatile uint8_t flag_50ms = 0;
-volatile uint8_t tick_10ms_counter = 0;
+volatile uint8_t tick_1ms_counter = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,36 +74,38 @@ static void MX_TIM6_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 // ================== EXTI ISR ==================
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-    if(GPIO_Pin == HOME_X_Pin)
-    {
-        Axis.X.isHomed = 1;
-        Motor_Stop(AXIS_X);
-    }
-    else if(GPIO_Pin == HOME_Y_Pin)
-    {
-        Axis.Y.isHomed = 1;
-        Motor_Stop(AXIS_Y);
-    }
-    else if(GPIO_Pin == HOME_Z_Pin)
-    {
-        Axis.Z.isHomed = 1;
-        Motor_Stop(AXIS_Z);
-    }
-}
+//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+//{
+//    if(GPIO_Pin == HOME_X_Pin)
+//    {
+//        Axis.X.isHomed = 1;
+//        Motor_Stop(AXIS_X);
+//    }
+//    else if(GPIO_Pin == HOME_Y_Pin)
+//    {
+//        Axis.Y.isHomed = 1;
+//        Motor_Stop(AXIS_Y);
+//    }
+//    else if(GPIO_Pin == HOME_Z_Pin)
+//    {
+//        Axis.Z.isHomed = 1;
+//        Motor_Stop(AXIS_Z);
+//    }
+//}
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim == &htim6)  // Timer 10ms
 	{
 
-		flag_10ms = 1;
-		tick_10ms_counter++;
-        Axis_TaskUpdate();
-		if(tick_10ms_counter >= 5)  // 5 x 10ms = 50ms
+		flag_1ms = 1;
+		tick_1ms_counter++;
+        //Axis_TaskUpdate();
+		if(tick_1ms_counter >= 10)  // 5 x 10ms = 50ms
 		{
-			tick_10ms_counter = 0;
-			flag_50ms = 1;
+		  Axis_TaskUpdate();
+		  Modbus_ExecuteCommands();
+			tick_1ms_counter = 0;
+			flag_10ms = 1;
 		}
 	}
 	if(htim->Instance == TIM5){
@@ -208,11 +210,12 @@ int main(void)
 //	  Set_Dir_Z(UP);
 //	  Motor_Start_Z(10);
 //	  HAL_Delay(1000);
-      Modbus_TaskUpdate();
       if(flag_10ms)
       {
           flag_10ms = 0;
-          Modbus_ExecuteCommands();
+          Modbus_TaskUpdate();
+//          Axis_TaskUpdate();
+//          Modbus_ExecuteCommands();
       }
 //	#ifndef DEBUG
 //		__WFI();
@@ -496,7 +499,7 @@ static void MX_TIM6_Init(void)
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = 84-1;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 10000-1;
+  htim6.Init.Period = 1000-1;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {

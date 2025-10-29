@@ -27,4 +27,12 @@ void Modbus_TaskInit(UART_HandleTypeDef *huart);
 void Modbus_TaskUpdate(void);         // Gọi trong main loop
 void Modbus_ExecuteCommands(void);    // Gọi mỗi 10ms
 
+void Handle_Set(void);
+void Handle_Left(void);
+void Handle_Right(void);
+void Handle_In(void);
+void Handle_Out(void);
+void Handle_Up(void);
+void Handle_Down(void);
+
 #endif /* INC_MODBUS_TASK_H_ */
