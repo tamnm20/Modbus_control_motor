@@ -194,7 +194,7 @@ void Modbus_ExecuteCommands(void)
     {
         mb_cmd.home_pending = 0;
         Coils_Database[1] &= ~(1 << 7);
-        Axis_MoveTo(0, 0, 10000.0f);
+        Axis_MoveTo(0, 0, 0, 10000.0f);
         return;
     }
 //
@@ -237,7 +237,7 @@ void Modbus_ExecuteCommands(void)
     if(mb_cmd.jog_z_down)
     {
         mb_cmd.jog_z_down = 0;
-        Axis_Jog(AXIS_Z, DOWN, 100, 1000.0f);
+        Axis_Jog(AXIS_Z, DOWN, 100, 2000.0f);
     }
     uint8_t current = Control_motor->all;
 
@@ -256,7 +256,8 @@ void Handle_Set(void)
     Coils_Database[0] &= ~(1 << 2);
     float x = (float)Holding_Registers_Database[0];
     float y = (float)Holding_Registers_Database[1];
-    Axis_MoveTo(x, y, 10000.0f);
+    float z = (float)Holding_Registers_Database[2];
+    Axis_MoveTo(x, y, z, 10000.0f);
 }
 void Handle_Left(void)
 {
@@ -276,9 +277,9 @@ void Handle_Out(void)
 }
 void Handle_Up(void)
 {
-	Axis_Jog(AXIS_Z, UP, 10, 1000.0f);
+	Axis_Jog(AXIS_Z, UP, 100, 2000.0f);
 }
 void Handle_Down(void)
 {
-	Axis_Jog(AXIS_Z, DOWN, 10, 1000.0f);
+	Axis_Jog(AXIS_Z, DOWN, 100, 2000.0f);
 }

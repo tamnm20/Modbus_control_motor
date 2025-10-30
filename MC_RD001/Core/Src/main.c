@@ -48,7 +48,7 @@ TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim8;
 TIM_HandleTypeDef htim9;
 
-//UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 volatile uint8_t flag_1ms = 0;
@@ -103,7 +103,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		if(tick_1ms_counter >= 10)  // 5 x 10ms = 50ms
 		{
 		  Axis_TaskUpdate();
-		  Modbus_ExecuteCommands();
 			tick_1ms_counter = 0;
 			flag_10ms = 1;
 		}
@@ -193,8 +192,8 @@ int main(void)
   HAL_Delay(1000);
   Axis_Init();
   Modbus_TaskInit(&huart1);
-  //Home_All();
-  Axis_Home();
+  Home_All();
+  //Axis_Home();
   while (1)
   {
     /* USER CODE END WHILE */
@@ -214,6 +213,7 @@ int main(void)
       {
           flag_10ms = 0;
           Modbus_TaskUpdate();
+		  Modbus_ExecuteCommands();
 //          Axis_TaskUpdate();
 //          Modbus_ExecuteCommands();
       }

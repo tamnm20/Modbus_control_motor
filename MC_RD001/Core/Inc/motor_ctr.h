@@ -11,8 +11,16 @@
 
 #include "stm32f4xx_hal.h"
 #include <math.h>
-//#include "gpio.h"
-//#include "timer.h"
+
+#define HOME_X_Pin GPIO_PIN_8
+#define HOME_X_GPIO_Port GPIOD
+#define HOME_X_EXTI_IRQn EXTI9_5_IRQn
+#define HOME_Y_Pin GPIO_PIN_9
+#define HOME_Y_GPIO_Port GPIOD
+#define HOME_Y_EXTI_IRQn EXTI9_5_IRQn
+#define HOME_Z_Pin GPIO_PIN_10
+#define HOME_Z_GPIO_Port GPIOD
+#define HOME_Z_EXTI_IRQn EXTI15_10_IRQn
 
 // ===== CONFIG =====
 #define STEPS_PER_MM 1u
@@ -20,7 +28,7 @@
 #define EPS_MM 		0.0005f  // float guard for zero
 #define X_MAX_MM  50000.0f
 #define Y_MAX_MM  28000.0f
-#define Z_MAX_MM  10000.0f
+#define Z_MAX_MM  8000.0f
 // ===== DIRECTION =====
 #define LEFT       1
 #define RIGHT      0
@@ -38,29 +46,35 @@ typedef enum {
 } MotorState_t;
 
 typedef enum {
+    HOMING_IDLE,
+    HOMING_INITIAL_CHECK,
+    HOMING_FAST_APPROACH,
+    HOMING_BACKOFF,
+    HOMING_SLOW_APPROACH,
+    HOMING_COMPLETE
+} HomingState_t;
+
+// Homing parameters
+#define HOMING_BACKOFF_STEPS    1000
+#define HOMING_FAST_FEED        2000.0f
+#define HOMING_SLOW_FEED        1000.0f
+
+typedef enum {
     AXIS_X = 0,
     AXIS_Y,
     AXIS_Z
 } AxisName_t;
 
 // ===== STRUCT =====
-//typedef struct {
-//    float position;
-//    MotorState_t state;
-//    uint32_t pulse_freq;
-//    float velocity;
-//    uint8_t isHomed;
-//    uint8_t direction;
-//} ServoMotor_t;
 typedef struct {
     float position;
     float start_position;
     float target_position;
 
     MotorState_t state;
+    HomingState_t homing_state;
     uint8_t direction;
-    uint8_t isHomed;
-//    float velocity;
+    volatile uint8_t sensor_triggered;
 
     uint32_t total_steps;
     uint32_t pulse_freq;
@@ -89,14 +103,6 @@ extern TIM_HandleTypeDef htim9;
 #define Motor_Start_Y(steps)    Motor_Start(AXIS_Y, steps)
 #define Motor_Start_Z(steps)    Motor_Start(AXIS_Z, steps)
 
-#define Axis_IsHomed_X()   (Axis.X.isHomed)
-#define Axis_IsHomed_Y()   (Axis.Y.isHomed)
-#define Axis_IsHomed_Z()   (Axis.Z.isHomed)
-
-#define Axis_IsBusy_X()    (Axis.X.state == MOTOR_BUSY)
-#define Axis_IsBusy_Y()    (Axis.Y.state == MOTOR_BUSY)
-#define Axis_IsBusy_Z()    (Axis.Z.state == MOTOR_BUSY)
-
 static inline void gpio_set(GPIO_TypeDef *port, uint8_t pin) { port->BSRR = (1u << pin); }
 static inline void gpio_clr(GPIO_TypeDef *port, uint8_t pin) { port->BSRR = (1u << (pin + 16)); }
 
@@ -112,7 +118,7 @@ static inline void Set_Dir_Y(uint8_t dir) {
 }
 
 static inline void Set_Dir_Z(uint8_t dir) {
-    if (dir == DOWN) gpio_set(GPIOB, 1);
+    if (dir != DOWN) gpio_set(GPIOB, 1);
     else gpio_clr(GPIOB, 1);
 }
 
