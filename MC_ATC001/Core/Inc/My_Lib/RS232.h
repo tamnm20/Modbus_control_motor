@@ -30,7 +30,7 @@ typedef union {
 typedef union {
     struct {
     	uint8_t Home :1;
-    	uint8_t Engineer :1;
+    	uint8_t Engine :1;
         uint8_t reserved : 6;
 
     } bits;

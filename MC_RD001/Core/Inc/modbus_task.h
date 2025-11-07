@@ -21,12 +21,57 @@ typedef struct {
     volatile uint32_t frame_count;
 } ModbusStatus_t;
 
+
+typedef union {
+    struct {
+        uint8_t Left     	: 1;
+        uint8_t Right    	: 1;
+        uint8_t In      	: 1;
+        uint8_t Out       	: 1;
+        uint8_t Up       	: 1;
+        uint8_t Down		: 1;
+        uint8_t Set      	: 1;
+        uint8_t Home		: 1;
+    } bits;
+    uint8_t all;
+} Control_motor_t;
+
+typedef union {
+    struct {
+        uint8_t GL1     	: 1;
+        uint8_t GL2	    	: 1;
+        uint8_t GL3      	: 1;
+        uint8_t CV1       	: 1;
+        uint8_t CV2 		: 1;
+        uint8_t CV3     	: 1;
+        uint8_t GL_save    	: 1;
+        uint8_t CV_save		: 1;
+    } bits;
+    uint8_t all;
+} Save_point_t;
+
+typedef union {
+    struct {
+    	uint8_t Home :1;
+    	uint8_t Engine :1;
+        uint8_t reserved : 6;
+    } bits;
+    uint8_t all;
+} Tab_Control_t;
+
+typedef void (*Handler_t)(void);
+typedef struct {
+    uint8_t bitMask;
+    Handler_t handler;
+} ActionMap_t;
+
 extern volatile ModbusStatus_t modbus_flags;
 
 void Modbus_TaskInit(UART_HandleTypeDef *huart);
 void Modbus_TaskUpdate(void);         // Gọi trong main loop
 void Modbus_ExecuteCommands(void);    // Gọi mỗi 10ms
 
+void Handle_Home(void);
 void Handle_Set(void);
 void Handle_Left(void);
 void Handle_Right(void);

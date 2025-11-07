@@ -9,52 +9,39 @@
 #include "modbusSlave.h"
 #include "motor_ctr.h"
 #include "axis_task.h"
+#include "flash.h"
 #include <string.h>
 
 volatile uint8_t RxData[RX_BUFF_SIZE];
 uint8_t TxData[TX_BUFF_SIZE];
 uint8_t ProcessBuffer[RX_BUFF_SIZE];
 volatile ModbusStatus_t modbus_flags = {0};
-UART_HandleTypeDef *modbus_uart;
 static uint32_t last_rx_tick = 0;
-typedef void (*MotorHandler_t)(void);
 
 /* ========== COMMAND FLAGS ========== */
-typedef struct {
-    uint8_t home_pending;
-    uint8_t jog_z_down;
-} ModbusCmd_t;
-
-typedef union {
-    struct {
-        uint8_t reserved : 2;
-        uint8_t Set      : 1;
-        uint8_t Left     : 1;
-        uint8_t Right    : 1;
-        uint8_t In      : 1;
-        uint8_t Out       : 1;
-        uint8_t Up       : 1;
-    } bits;
-    uint8_t all;
-} Control_motor_t;
-
-typedef struct {
-    uint8_t bitMask;
-    MotorHandler_t handler;
-} MotorActionMap_t;
-
-MotorActionMap_t motorActionTable[] = {
-    { 1 << 2, Handle_Set   },
-    { 1 << 3, Handle_Left  },
-    { 1 << 4, Handle_Right },
-    { 1 << 5, Handle_In    },
-    { 1 << 6, Handle_Out   },
-    { 1 << 7, Handle_Up    },
+ActionMap_t motorActionTable[] = {
+	{ 1 << 0, Handle_Left   },
+	{ 1 << 1, Handle_Right  },
+    { 1 << 2, Handle_In   	},
+    { 1 << 3, Handle_Out  	},
+    { 1 << 4, Handle_Up 	},
+    { 1 << 5, Handle_Down   },
+    { 1 << 6, Handle_Set    },
+    { 1 << 7, Handle_Home   },
 };
-
-Control_motor_t* Control_motor = (Control_motor_t*)&Coils_Database[0];
-
-static ModbusCmd_t mb_cmd = {0};
+ActionMap_t saveActionTable[] = {
+	{ 1 << 0, Handle_GL1   	},
+	{ 1 << 1, Handle_GL2  	},
+    { 1 << 2, Handle_GL3   	},
+    { 1 << 3, Handle_CV1 	},
+    { 1 << 4, Handle_CV2   	},
+    { 1 << 5, Handle_CV3    },
+    { 1 << 6, Handle_GL_save},
+    { 1 << 7, Handle_CV_save},
+};
+Tab_Control_t* Tab = (Tab_Control_t*)&Coils_Database[0];
+Control_motor_t* Control_motor = (Control_motor_t*)&Coils_Database[1];
+Save_point_t* Save_point = (Save_point_t *)&Coils_Database[4];
 
 void Modbus_TaskInit(UART_HandleTypeDef *huart)
 {
@@ -173,15 +160,6 @@ void Modbus_TaskUpdate(void)
 			case 0x10: writeHoldingRegs(); break;
 			default:   modbusException(ILLEGAL_FUNCTION); break;
 		}
-//		uint8_t coils = Coils_Database[0];
-		uint8_t coil2 = Coils_Database[1];
-//
-		mb_cmd.jog_z_down    = (coil2) & 1;
-//		mb_cmd.jog_x_right   = (coils >> 4) & 1;
-//		mb_cmd.jog_y_back    = (coils >> 5) & 1;
-//		mb_cmd.jog_y_forward = (coils >> 6) & 1;
-//		mb_cmd.move_to_pending = (coils >> 2) & 1;
-		mb_cmd.home_pending = (coil2 >> 7) & 1;
 		modbus_flags.busy = 0;
 
 }
@@ -189,75 +167,44 @@ void Modbus_TaskUpdate(void)
 /* Gọi trong main loop */
 void Modbus_ExecuteCommands(void)
 {
-    // Home
-    if(mb_cmd.home_pending)
-    {
-        mb_cmd.home_pending = 0;
-        Coils_Database[1] &= ~(1 << 7);
-        Axis_MoveTo(0, 0, 0, 10000.0f);
-        return;
-    }
-//
-//    // Move To
-//    if(mb_cmd.move_to_pending)
-//    {
-//        mb_cmd.move_to_pending = 0;
-//        Coils_Database[0] &= ~(1 << 2);
-//
-//        float x = (float)Holding_Registers_Database[0];
-//        float y = (float)Holding_Registers_Database[1];
-//        Axis_MoveTo(x, y, 10000.0f);
-//        return;
-//    }
-//
-//    // Jog commands
-//    if(mb_cmd.jog_x_left)
-//    {
-//        mb_cmd.jog_x_left = 0;
-//        Axis_Jog(AXIS_X, LEFT, 100, 5000.0f);
-//    }
-//
-//    if(mb_cmd.jog_x_right)
-//    {
-//        mb_cmd.jog_x_right = 0;
-//        Axis_Jog(AXIS_X, RIGHT, 100, 5000.0f);
-//    }
-//
-//    if(mb_cmd.jog_y_back)
-//    {
-//        mb_cmd.jog_y_back = 0;
-//        Axis_Jog(AXIS_Y, BACKWARD, 100, 5000.0f);
-//    }
-//
-//    if(mb_cmd.jog_y_forward)
-//    {
-//        mb_cmd.jog_y_forward = 0;
-//        Axis_Jog(AXIS_Y, FORWARD, 100, 5000.0f);
-//    }
-    if(mb_cmd.jog_z_down)
-    {
-        mb_cmd.jog_z_down = 0;
-        Axis_Jog(AXIS_Z, DOWN, 100, 2000.0f);
-    }
-    uint8_t current = Control_motor->all;
+	if(Tab->bits.Engine){
+	    uint8_t current = Control_motor->all;
 
-	for (int i = 0; i < sizeof(motorActionTable)/sizeof(MotorActionMap_t); i++)
-	{
-		if (current & motorActionTable[i].bitMask)
+		for (int i = 0; i < sizeof(motorActionTable)/sizeof(ActionMap_t); i++)
 		{
-			motorActionTable[i].handler();
-			//break;
+			if (current & motorActionTable[i].bitMask)
+			{
+				motorActionTable[i].handler();
+				break;
+			}
 		}
+		current = Save_point->all;
+		for (int i = 0; i < sizeof(saveActionTable)/sizeof(ActionMap_t); i++)
+		{
+			if (current & saveActionTable[i].bitMask)
+			{
+				saveActionTable[i].handler();
+				break;
+			}
+		}
+	}
+	else if(Tab->bits.Home){
+
 	}
 }
 
 void Handle_Set(void)
 {
-    Coils_Database[0] &= ~(1 << 2);
+    Coils_Database[1] &= ~(1 << 6);
     float x = (float)Holding_Registers_Database[0];
     float y = (float)Holding_Registers_Database[1];
     float z = (float)Holding_Registers_Database[2];
     Axis_MoveTo(x, y, z, 10000.0f);
+}
+void Handle_Home(void)
+{
+    Coils_Database[1] &= ~(1 << 7);
+    Axis_MoveTo(0, 0, 0, 10000.0f);
 }
 void Handle_Left(void)
 {

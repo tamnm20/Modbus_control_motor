@@ -35,11 +35,13 @@ extern "C" {
 #include "modbusSlave.h"
 #include "modbus_task.h"
 #include "axis_task.h"
+//#include "flash.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+/* HSE_VALUE */
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

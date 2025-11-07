@@ -25,7 +25,9 @@ extern uint16_t Holding_Registers_Database[50];
 
 extern volatile uint8_t RxData[RX_BUFF_SIZE];
 extern uint8_t TxData[TX_BUFF_SIZE];
-extern UART_HandleTypeDef huart1;
+//extern UART_HandleTypeDef huart1;
+//extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef *modbus_uart;
 
 uint8_t readHoldingRegs (void);
 uint8_t readInputRegs (void);
