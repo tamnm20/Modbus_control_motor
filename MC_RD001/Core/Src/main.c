@@ -196,9 +196,10 @@ int main(void)
   Axis_Init();
   Modbus_TaskInit(&huart1);
   //LoadCornerData(&cornerData);
-  Home_All();
-  Panel_Init(&Glass);
-  //Axis_Home();
+  //Home_All();
+  PanelScanner_Init();
+  Panel_InitAll();
+  Axis_Home();
   while (1)
   {
     /* USER CODE END WHILE */
@@ -218,6 +219,7 @@ int main(void)
       {
           flag_10ms = 0;
           Modbus_TaskUpdate();
+          PanelScanner_Update();
 		  Modbus_ExecuteCommands();
 //          Axis_TaskUpdate();
       }
