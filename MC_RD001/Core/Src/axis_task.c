@@ -148,7 +148,7 @@ void Axis_MoveTo(float x_mm, float y_mm, float z_mm, float feed_mm_s)
     Axis.Y.direction = dir_y;
     Axis.Z.direction = dir_z;
 
-    //HAL_Delay(1);  // Delay cho driver nhận tín hiệu direction
+    //HAL_Delay(1);
 
     // ===== 5. TÍNH KHOẢNG CÁCH 3D =====
     // dist = sqrt(dx^2 + dy^2 + dz^2)

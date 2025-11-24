@@ -54,10 +54,42 @@ typedef union {
     struct {
     	uint8_t Home :1;
     	uint8_t Engine :1;
+//    	uint8_t Start_state:1;
+//    	uint8_t Start:1;
+//    	uint8_t Scan_state:1;
+//    	uint8_t Scan:1;
         uint8_t reserved : 6;
     } bits;
     uint8_t all;
 } Tab_Control_t;
+
+typedef union {
+    struct {
+    	uint8_t Tray1 :1;
+    	uint8_t Tray2 :1;
+    	uint8_t Tray3 :1;
+    	uint8_t Tray4 :1;
+    	uint8_t Start:1;
+    	uint8_t Scan:1;
+    	uint8_t Reset_state:1;
+        uint8_t reserved : 1;
+    } bits;
+    uint8_t all;
+} GL_tray_t;
+
+typedef union {
+    struct {
+        uint8_t LedG     	: 1;
+        uint8_t LedR    	: 1;
+        uint8_t Tray1      	: 1;
+        uint8_t Tray2      	: 1;
+        uint8_t Tray3      	: 1;
+        uint8_t Tray4		: 1;
+        uint8_t Start      	: 1;
+        uint8_t Scan		: 1;
+    } bits;
+    uint8_t all;
+} Home_state_t;
 
 typedef void (*Handler_t)(void);
 typedef struct {
@@ -68,8 +100,8 @@ typedef struct {
 extern volatile ModbusStatus_t modbus_flags;
 
 void Modbus_TaskInit(UART_HandleTypeDef *huart);
-void Modbus_TaskUpdate(void);         // Gọi trong main loop
-void Modbus_ExecuteCommands(void);    // Gọi mỗi 10ms
+void Modbus_TaskUpdate(void);
+void Modbus_ExecuteCommands(void);
 
 void Handle_Home(void);
 void Handle_Set(void);
@@ -79,5 +111,12 @@ void Handle_In(void);
 void Handle_Out(void);
 void Handle_Up(void);
 void Handle_Down(void);
+void Handle_Tray1(void);
+void Handle_Tray2(void);
+void Handle_Tray3(void);
+void Handle_Tray4(void);
+void Handle_Start(void);
+void Handle_Scan(void);
+void Handle_Reset_state(void);
 
 #endif /* INC_MODBUS_TASK_H_ */

@@ -8,11 +8,8 @@
 #include <string.h>
 #include "motor_ctr.h"
 
-extern uint8_t Coils_Database[25];
-extern uint16_t Holding_Registers_Database[50];
-uint16_t Test_Database[3]={49925, 20467, 40300};
 static uint8_t flash_buf[FLASH_CFG_REGION_SIZE];
-CornerData_t cornerData;
+//CornerData_t cornerData;
 
 /* ================= CRC32 ================= */
 uint32_t FLASH_CalcCRC32(const void *data, size_t len)
@@ -144,20 +141,6 @@ bool Flash_ReadSimple(uint32_t addr, void *buf, size_t len)
     return true;
 }
 
-bool LoadCornerData(CornerData_t *out)
-{
-    if (out == NULL) return false;
-
-    // Đọc 12 giá trị uint16_t (24 byte)
-    const uint16_t *src = (const uint16_t *)FLASH_USER_BASE_ADDR;
-
-    for (int i = 0; i < 12; i++) {
-        ((uint16_t*)out)[i] = src[i];
-    }
-
-    return true;
-}
-
 /* ================= Kiểu có check (header + CRC) ================= */
 bool Flash_EraseChecked(void)
 {
@@ -213,55 +196,54 @@ bool Flash_LoadChecked(void *buf, size_t maxlen, size_t *out_len)
 void Handle_GL1(void)
 {
 	Coils_Database[4] &= ~(1 << 0);
-	Holding_Registers_Database[35] = (uint16_t) Axis.X.position;
-	Holding_Registers_Database[36] = (uint16_t) Axis.Y.position;
+	Holding_Registers_Database[3] = (uint16_t) Axis.X.position;
+	Holding_Registers_Database[4] = (uint16_t) Axis.Y.position;
 	Coils_Database[3] |= (1 << 0);
 }
 void Handle_GL2(void)
 {
 	Coils_Database[4] &= ~(1 << 1);
-	Holding_Registers_Database[37] = (uint16_t) Axis.X.position;
-	Holding_Registers_Database[38] = (uint16_t) Axis.Y.position;
+	Holding_Registers_Database[5] = (uint16_t) Axis.X.position;
+	Holding_Registers_Database[6] = (uint16_t) Axis.Y.position;
 	Coils_Database[3] |= (1 << 1);
 }
 void Handle_GL3(void)
 {
 	Coils_Database[4] &= ~(1 << 2);
-	Holding_Registers_Database[39] = (uint16_t) Axis.X.position;
-	Holding_Registers_Database[40] = (uint16_t) Axis.Y.position;
+	Holding_Registers_Database[7] = (uint16_t) Axis.X.position;
+	Holding_Registers_Database[8] = (uint16_t) Axis.Y.position;
 	Coils_Database[3] |= (1 << 2);
 }
 void Handle_CV1(void)
 {
 	Coils_Database[4] &= ~(1 << 3);
-	Holding_Registers_Database[41] = (uint16_t) Axis.X.position;
-	Holding_Registers_Database[42] = (uint16_t) Axis.Y.position;
+	Holding_Registers_Database[9] = (uint16_t) Axis.X.position;
+	Holding_Registers_Database[10] = (uint16_t) Axis.Y.position;
 	Coils_Database[3] |= (1 << 3);
 }
 void Handle_CV2(void)
 {
 	Coils_Database[4] &= ~(1 << 4);
-	Holding_Registers_Database[43] = (uint16_t) Axis.X.position;
-	Holding_Registers_Database[44] = (uint16_t) Axis.Y.position;
+	Holding_Registers_Database[11] = (uint16_t) Axis.X.position;
+	Holding_Registers_Database[12] = (uint16_t) Axis.Y.position;
 	Coils_Database[3] |= (1 << 4);
 }
 void Handle_CV3(void)
 {
 	Coils_Database[4] &= ~(1 << 5);
-	Holding_Registers_Database[45] = (uint16_t) Axis.X.position;
-	Holding_Registers_Database[46] = (uint16_t) Axis.Y.position;
+	Holding_Registers_Database[13] = (uint16_t) Axis.X.position;
+	Holding_Registers_Database[14] = (uint16_t) Axis.Y.position;
 	Coils_Database[3] |= (1 << 5);
 }
 void Handle_GL_save(void)
 {
 		Coils_Database[4] &= ~(1 << 6);
-		uint32_t primask = __get_PRIMASK();
-		__disable_irq();
-
+//		uint32_t primask = __get_PRIMASK();
+//		__disable_irq();
 		//Flash_EraseSimple();                                      // erase sector
 		//Flash_WriteSimple(FLASH_USER_BASE_ADDR, &num, sizeof(num)); // program 4 byte
-		FLASH_Update(FLASH_USER_BASE_ADDR, &Holding_Registers_Database[35], 12);
-
+		FLASH_Update(FLASH_USER_BASE_ADDR, &Holding_Registers_Database[3], 12);
+		//LoadCornerData(Glass->geom);
 //		float readback = 0;
 //		uint16_t rb =0;
 //		float num = Holding_Registers_Database[35];
@@ -273,18 +255,13 @@ void Handle_GL_save(void)
 //		else{
 //			Test_Database[1]--;
 //		}
-		if (primask == 0U) {
-			__enable_irq();
-		}
+//		if (primask == 0U) {
+//			__enable_irq();
+//		}
 }
 void Handle_CV_save(void)
 {
 	Coils_Database[4] &= ~(1 << 7);
-	uint32_t primask = __get_PRIMASK();
-	__disable_irq();
-	FLASH_Update(FLASH_USER_BASE_ADDR+12, &Holding_Registers_Database[41], 12);
-	if (primask == 0U) {
-		__enable_irq();
-	}
+	FLASH_Update(FLASH_USER_BASE_ADDR+12, &Holding_Registers_Database[9], 12);
 }
 

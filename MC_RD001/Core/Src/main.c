@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "flash.h"
+//#include "flash.h"
+#include "glass.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,8 +102,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 		flag_1ms = 1;
 		tick_1ms_counter++;
-        //Axis_TaskUpdate();
-		if(tick_1ms_counter >= 10)  // 5 x 10ms = 50ms
+		if(tick_1ms_counter >= 10)
 		{
 		  Axis_TaskUpdate();
 			tick_1ms_counter = 0;
@@ -195,9 +195,10 @@ int main(void)
   HAL_Delay(1000);
   Axis_Init();
   Modbus_TaskInit(&huart1);
-  LoadCornerData(&cornerData);
-  //Home_All();
-  Axis_Home();
+  //LoadCornerData(&cornerData);
+  Home_All();
+  Panel_Init(&Glass);
+  //Axis_Home();
   while (1)
   {
     /* USER CODE END WHILE */
@@ -219,7 +220,6 @@ int main(void)
           Modbus_TaskUpdate();
 		  Modbus_ExecuteCommands();
 //          Axis_TaskUpdate();
-//          Modbus_ExecuteCommands();
       }
 //	#ifndef DEBUG
 //		__WFI();

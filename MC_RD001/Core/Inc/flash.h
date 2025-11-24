@@ -34,7 +34,10 @@ typedef struct {
     Point16_t coverCorner3;
 } CornerData_t;
 
-extern CornerData_t cornerData;
+//extern CornerData_t cornerData;
+extern uint8_t Inputs_Database[50];
+extern uint8_t Coils_Database[25];
+extern uint16_t Holding_Registers_Database[50];
 /* ===== Header cho kiểu "có check" ===== */
 typedef struct __attribute__((packed)) {
     uint32_t magic;      // Nhận dạng (0x464C5348 = 'FLSH')
@@ -53,7 +56,7 @@ bool Flash_WriteSimple(uint32_t addr, const void *data, size_t len);
 bool FLASH_Clear(uint32_t dest, uint32_t numbytes);
 bool FLASH_Update(uint32_t dest, const void *src, uint32_t numbytes);
 bool Flash_ReadSimple(uint32_t addr, void *buf, size_t len);
-bool LoadCornerData(CornerData_t *out);
+
 
 /* ====== Kiểu 2: có header + CRC ====== */
 bool Flash_SaveChecked(const void *data, size_t len);
@@ -68,7 +71,5 @@ void Handle_CV1(void);
 void Handle_CV2(void);
 void Handle_CV3(void);
 void Handle_CV_save(void);
-
-//void Flash_Write_Read_Example(void);
 
 #endif /* INC_FLASH_H_ */

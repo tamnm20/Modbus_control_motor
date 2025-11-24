@@ -9,7 +9,8 @@
 #include "modbusSlave.h"
 #include "motor_ctr.h"
 #include "axis_task.h"
-#include "flash.h"
+//#include "flash.h"
+#include "glass.h"
 #include <string.h>
 
 volatile uint8_t RxData[RX_BUFF_SIZE];
@@ -39,16 +40,27 @@ ActionMap_t saveActionTable[] = {
     { 1 << 6, Handle_GL_save},
     { 1 << 7, Handle_CV_save},
 };
+ActionMap_t GLActionTable[] = {
+	{ 1 << 0, Handle_Tray1  },
+	{ 1 << 1, Handle_Tray2  },
+    { 1 << 2, Handle_Tray3  },
+    { 1 << 3, Handle_Tray4 	},
+	{ 1 << 4, Handle_Start  },
+	{ 1 << 5, Handle_Scan  },
+    { 1 << 6, Handle_Reset_state  },
+};
 Tab_Control_t* Tab = (Tab_Control_t*)&Coils_Database[0];
 Control_motor_t* Control_motor = (Control_motor_t*)&Coils_Database[1];
+GL_tray_t* GL_tray = (GL_tray_t*)&Coils_Database[2];
 Save_point_t* Save_point = (Save_point_t *)&Coils_Database[4];
+Home_state_t* Home_state = (Home_state_t *)&Inputs_Database[0];
 
+//__attribute__((used))
 void Modbus_TaskInit(UART_HandleTypeDef *huart)
 {
     modbus_uart = huart;
     last_rx_tick = HAL_GetTick();
 
-    // Start reception với buffer size phù hợp
     HAL_StatusTypeDef status = HAL_UARTEx_ReceiveToIdle_IT(
         modbus_uart,
         (uint8_t*)RxData,
@@ -117,7 +129,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 }
 
 /* ========== MODBUS TASK ========== */
-
 void Modbus_TaskUpdate(void)
 {
     uint32_t now = HAL_GetTick();
@@ -138,58 +149,81 @@ void Modbus_TaskUpdate(void)
         HAL_UARTEx_ReceiveToIdle_IT(modbus_uart, (uint8_t*)RxData, RX_BUFF_SIZE);
         last_rx_tick = now;
     }
-        // ===== PROCESS FRAME =====
-		if (!modbus_flags.frame_ready || modbus_flags.busy)
-			return;
+	// ===== PROCESS FRAME =====
+	if (!modbus_flags.frame_ready || modbus_flags.busy)
+		return;
 
-		modbus_flags.busy = 1;
-		modbus_flags.frame_ready = 0;
+	modbus_flags.busy = 1;
+	modbus_flags.frame_ready = 0;
 
-		// Process from ProcessBuffer (copy of RxData)
-		uint8_t func = ProcessBuffer[1];
+	// Process from ProcessBuffer (copy of RxData)
+	uint8_t func = ProcessBuffer[1];
 
-		switch (func)
-		{
-			case 0x03: readHoldingRegs(); break;
-			case 0x04: readInputRegs(); break;
-			case 0x01: readCoils(); break;
-			case 0x02: readInputs(); break;
-			case 0x05: writeCoil(); break;
-			case 0x0F: writeCoils(); break;
-			case 0x06: writeSingleReg(); break;
-			case 0x10: writeHoldingRegs(); break;
-			default:   modbusException(ILLEGAL_FUNCTION); break;
-		}
-		modbus_flags.busy = 0;
-
+	switch (func)
+	{
+		case 0x03: readHoldingRegs(); break;
+		case 0x04: readInputRegs(); break;
+		case 0x01: readCoils(); break;
+		case 0x02: readInputs(); break;
+		case 0x05: writeCoil(); break;
+		case 0x0F: writeCoils(); break;
+		case 0x06: writeSingleReg(); break;
+		case 0x10: writeHoldingRegs(); break;
+		default:   modbusException(ILLEGAL_FUNCTION); break;
+	}
+	modbus_flags.busy = 0;
 }
 
-/* Gọi trong main loop */
 void Modbus_ExecuteCommands(void)
 {
 	if(Tab->bits.Engine){
 	    uint8_t current = Control_motor->all;
 
-		for (int i = 0; i < sizeof(motorActionTable)/sizeof(ActionMap_t); i++)
-		{
-			if (current & motorActionTable[i].bitMask)
-			{
-				motorActionTable[i].handler();
-				break;
-			}
-		}
+//		for (int i = 0; i < sizeof(motorActionTable)/sizeof(ActionMap_t); i++)
+//		{
+//			if (current & motorActionTable[i].bitMask)
+//			{
+//				motorActionTable[i].handler();
+//				break;
+//			}
+//		}
+	    if (current != 0)
+	    {
+	        int bitIndex = __builtin_ctz(current);
+	        motorActionTable[bitIndex].handler();
+	    }
 		current = Save_point->all;
-		for (int i = 0; i < sizeof(saveActionTable)/sizeof(ActionMap_t); i++)
-		{
-			if (current & saveActionTable[i].bitMask)
-			{
-				saveActionTable[i].handler();
-				break;
-			}
-		}
+//		for (int i = 0; i < sizeof(saveActionTable)/sizeof(ActionMap_t); i++)
+//		{
+//			if (current & saveActionTable[i].bitMask)
+//			{
+//				saveActionTable[i].handler();
+//				break;
+//			}
+//		}
+	    if (current != 0)
+	    {
+	        int bitIndex = __builtin_ctz(current);
+	        saveActionTable[bitIndex].handler();
+	    }
 	}
-	else if(Tab->bits.Home){
-
+	else if(Tab->bits.Home && Home_state->bits.Scan == 0){
+	    uint8_t current = GL_tray->all;
+//		for (int i = 0; i < sizeof(GLActionTable)/sizeof(ActionMap_t); i++)
+//		{
+//			if (current & GLActionTable[i].bitMask)
+//			{
+//				GLActionTable[i].handler();
+//				break;
+//			}
+//		}
+	    if (current != 0)
+	    {
+	        int bitIndex = __builtin_ctz(current);
+	        GLActionTable[bitIndex].handler();
+	    }
+	    Input_Registers_Database[0] = Holding_Registers_Database[15];
+	    Input_Registers_Database[1] = Holding_Registers_Database[16];
 	}
 }
 
@@ -229,4 +263,54 @@ void Handle_Up(void)
 void Handle_Down(void)
 {
 	Axis_Jog(AXIS_Z, DOWN, 100, 2000.0f);
+}
+void Handle_Tray1(void){
+	//Home_state->bits.Tray1 = 1;
+	Home_state->all &= ~(0b1111<<2);
+	Home_state->all |= (1<<2);
+	Map_QualityBits_To_Inputs(Glass[0].quality_bits, 7);
+}
+void Handle_Tray2(void){
+	Home_state->all &= ~(0b1111<<2);
+	Home_state->all |= (1<<3);
+	Map_QualityBits_To_Inputs(Glass[1].quality_bits, 7);
+}
+void Handle_Tray3(void){
+	Home_state->all &= ~(0b1111<<2);
+	Home_state->all |= (1<<4);
+	Map_QualityBits_To_Inputs(Glass[2].quality_bits, 7);
+}
+void Handle_Tray4(void){
+	Home_state->all &= ~(0b1111<<2);
+	Home_state->all |= (1<<5);
+	Map_QualityBits_To_Inputs(Glass[3].quality_bits, 7);
+}
+
+void Handle_Start(void){
+	Home_state->bits.Start = 1;
+}
+void Handle_Scan(void){
+	Home_state->bits.Scan = 1;
+    if(Home_state->bits.Tray1)
+    {
+        PanelScanner_StartRange(0, 3);
+    }
+    else if(Home_state->bits.Tray2)
+    {
+        PanelScanner_StartRange(1, 3);
+    }
+    else if(Home_state->bits.Tray3)
+    {
+        PanelScanner_StartRange(2, 3);
+    }
+    else if(Home_state->bits.Tray4)
+    {
+        PanelScanner_StartRange(3, 3);
+    }
+	else{
+
+	}
+}
+void Handle_Reset_state(void){
+
 }

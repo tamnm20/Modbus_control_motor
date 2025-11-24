@@ -18,7 +18,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     	Motor_Stop(AXIS_X);
 //	    HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
 //        HAL_TIM_Base_Stop_IT(&htim2);
-    	//Axis.X.position = 0.0f;
+    	Axis.X.position = 0.0f;
         Axis.X.sensor_triggered = 1;
     }
     else if(GPIO_Pin == HOME_Y_Pin)
@@ -26,7 +26,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     	Motor_Stop(AXIS_Y);
 //    	HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_1);
 //        HAL_TIM_Base_Stop_IT(&htim5);
-//    	Axis.Y.position = 0.0f;
+    	Axis.Y.position = 0.0f;
         Axis.Y.sensor_triggered = 1;
     }
     else if(GPIO_Pin == HOME_Z_Pin)
@@ -34,7 +34,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     	Motor_Stop(AXIS_Z);
 //    	HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
 //        HAL_TIM_Base_Stop_IT(&htim9);
-//    	Axis.Z.position = 0.0f;
+    	Axis.Z.position = 0.0f;
         Axis.Z.sensor_triggered = 1;
     }
 }
@@ -369,5 +369,8 @@ void Home_All(void)
     Axis.Y.position = 0.0f;
     Axis.Z.position = 0.0f;
 
+    Axis.X.sensor_triggered = 0;
+    Axis.Y.sensor_triggered = 0;
+    Axis.Z.sensor_triggered = 0;
     HAL_Delay(10);
 }
