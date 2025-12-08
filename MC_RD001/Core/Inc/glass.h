@@ -10,7 +10,7 @@
 
 #include "flash.h"
 #include "modbus_task.h"
-bool LoadCornerData(CornerData_t *out);
+bool LoadCornerData(G_CornerData_t *out, uint8_t offset);
 typedef struct {
     float x;
     float y;
@@ -22,7 +22,7 @@ typedef struct {
 #define PANEL_BITS_WORDS  7
 
 typedef struct {
-    CornerData_t geom;                       // 12 bytes
+    G_CornerData_t geom;                       // 12 bytes
     uint32_t    quality_bits[PANEL_BITS_WORDS]; // 196 bit = OK/NG
 } PanelPacked_t;
 

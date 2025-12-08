@@ -108,16 +108,19 @@ static inline void gpio_clr(GPIO_TypeDef *port, uint8_t pin) { port->BSRR = (1u 
 
 // ===== INLINE DIR CONTROL =====
 static inline void Set_Dir_X(uint8_t dir) {
+    Axis.X.direction = dir;
     if (dir != RIGHT) gpio_set(GPIOC, 7);
     else gpio_clr(GPIOC, 7);
 }
 
 static inline void Set_Dir_Y(uint8_t dir) {
+    Axis.Y.direction = dir;
     if (dir != FORWARD) gpio_set(GPIOD, 15);
     else gpio_clr(GPIOD, 15);
 }
 
 static inline void Set_Dir_Z(uint8_t dir) {
+    Axis.Z.direction = dir;
     if (dir != DOWN) gpio_set(GPIOB, 1);
     else gpio_clr(GPIOB, 1);
 }

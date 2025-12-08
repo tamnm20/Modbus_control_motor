@@ -10,19 +10,61 @@
 #include "axis_task.h"
 
 PanelPacked_t Glass[PANEL_COUNT];
+C_CornerData_t cover;
 static PanelScanner_t scanner = {0};
-#define STABLE_DELAY_MS  50
+#define STABLE_DELAY_MS  100
 #define SENSOR_TIMEOUT_MS 100
+#define DISTANCE_SHEET 8175
 
-bool LoadCornerData(CornerData_t *out)
+bool LoadCornerData(G_CornerData_t *out, uint8_t offset)
 {
     if (out == NULL) return false;
-
+    C_CornerData_t *cv = &cover;
     const uint16_t *src = (const uint16_t *)FLASH_USER_BASE_ADDR;
-
-    for (int i = 0; i < 12; i++) {
-        ((uint16_t*)out)[i] = src[i];
-        Holding_Registers_Database[3+i] = src[i];
+    switch(offset){
+    	case 0:
+    		{
+    		    for (int i = 0; i < 6; i++) {
+    		        ((uint16_t*)out)[i] = src[i];
+    		        Holding_Registers_Database[3+i] = src[i];
+    		    	((uint16_t*)cv)[i] = src[6+i];
+    		        Holding_Registers_Database[3+6+i] = src[6+i];
+    		    }
+    		}
+    		break;
+    	case 1:
+			{
+				for (int i = 0; i < 6; i++) {
+					if(i%2==0){
+						((uint16_t*)out)[i] = src[i] + DISTANCE_SHEET;
+					}
+					else{
+						((uint16_t*)out)[i] = src[i];
+					}
+				}
+			}
+    		break;
+    	case 2:
+			{
+				for (int i = 0; i < 6; i++) {
+					if(i%2==0){
+						((uint16_t*)out)[i] = src[i];
+					}
+					else{
+						((uint16_t*)out)[i] = src[i] + DISTANCE_SHEET;
+					}
+				}
+			}
+    		break;
+    	case 3:
+			{
+				for (int i = 0; i < 6; i++) {
+					((uint16_t*)out)[i] = src[i] + DISTANCE_SHEET;
+				}
+			}
+    		break;
+    	default:
+    		break;
     }
     return true;
 }
@@ -30,9 +72,9 @@ static inline uint16_t panel_idx(uint8_t i, uint8_t j)
 {
     return (uint16_t)(j * GRID_SIZE + i);
 }
-void Set_InputBit(uint16_t bit_index)
+static inline void Set_InputBit(uint16_t bit_index)
 {
-    if (bit_index >= 196) return;
+    if (bit_index >= NUM_CELLS) return;
 
     uint16_t byte = 1 + (bit_index / 8);
     uint8_t  bit  = bit_index % 8;
@@ -41,9 +83,9 @@ void Set_InputBit(uint16_t bit_index)
 }
 
 // Clear bit
-void Clear_InputBit(uint16_t bit_index)
+static inline void Clear_InputBit(uint16_t bit_index)
 {
-    if (bit_index >= 196) return;
+    if (bit_index >= NUM_CELLS) return;
 
     uint16_t byte = 1 + (bit_index / 8);
     uint8_t  bit  = bit_index % 8;
@@ -54,7 +96,7 @@ void Clear_InputBit(uint16_t bit_index)
 // Get bit
 uint8_t Get_InputBit(uint16_t bit_index)
 {
-    if (bit_index >= 196) return 0;
+    if (bit_index >= NUM_CELLS) return 0;
 
     uint16_t byte = 1 + (bit_index / 8);
     uint8_t  bit  = bit_index % 8;
@@ -89,8 +131,6 @@ static inline uint8_t panel_is_ok(const PanelPacked_t *p, uint8_t i, uint8_t j)
 
 void Panel_Init(PanelPacked_t *p)
 {
-    LoadCornerData(&p->geom);
-
     for (int k = 0; k < PANEL_BITS_WORDS; k++) {
         p->quality_bits[k] = 0x00000000u;
     }
@@ -102,6 +142,7 @@ void Panel_InitAll(void)
         Inputs_Database[i] = 0;
     for(uint8_t i = 0; i < PANEL_COUNT; i++)
     {
+        LoadCornerData(&Glass[i].geom, i);
         Panel_Init(&Glass[i]);
     }
 }
@@ -123,13 +164,15 @@ Point2D_t Panel_GetCellCenter(const PanelPacked_t *p, uint8_t i, uint8_t j)
 
 static bool Sensor_ReadQuality(void)
 {
-    // TODO: thay bằng code đọc cảm biến thực tế
-    //  - Đọc giá trị ADC / tín hiệu digital
-    //  - Xử lý ngưỡng hoặc logic phân loại OK/NG
-    // Tạm thời: random mô phỏng
+    // Linear Congruential Generator (LCG)
     static uint32_t seed = 1234567;
     seed = seed * 1103515245 + 12345;
-    return (seed >> 16) & 1;  // ngẫu nhiên 0 hoặc 1
+
+    uint32_t rnd = (seed >> 16) & 0xFFFF;   // lấy 16-bit random
+    rnd = rnd % 100;                        // thu về 0..99
+
+    // 95% → trả về 0, 5% → trả về 1
+    return (rnd < 5) ? 1 : 0;
 }
 
 /* ========================================
@@ -145,6 +188,7 @@ void PanelScanner_Init(void)
     scanner.start_tray = 0;
     scanner.end_tray = 0;
     scanner.current_tray = 0;
+    Panel_InitAll();
 }
 void PanelScanner_StartRange(uint8_t start_tray, uint8_t end_tray)
 {
@@ -176,7 +220,8 @@ void PanelScanner_StartRange(uint8_t start_tray, uint8_t end_tray)
 
     // Di chuyển đến cell đầu tiên
     Point2D_t pos = Panel_GetCellCenter(scanner.panel, 0, 0);
-    Axis_MoveTo2D(pos.x, pos.y, 10000.0f);
+    //Axis_MoveTo2D(pos.x, pos.y, 10000.0f);
+    Axis_MoveTo(pos.x, pos.y, 8000, 10000.0f);
 }
 /* ========================================
  * START SCAN
@@ -254,7 +299,7 @@ void PanelScanner_Update(void)
                 Point2D_t pos = Panel_GetCellCenter(scanner.panel,
                                                     scanner.current_i,
                                                     scanner.current_j);
-                Axis_MoveTo2D(pos.x, pos.y, 10000.0f);
+                Axis_MoveTo2D(pos.x, pos.y, 5000.0f);
                 scanner.state = SCAN_MOVING;
             }
             break;
@@ -294,7 +339,7 @@ void PanelScanner_Update(void)
 
 void Map_QualityBits_To_Inputs(const uint32_t *quality_bits, uint8_t count_words)
 {
-    uint32_t total_bits = 196;
+    uint32_t total_bits = NUM_CELLS;
 
     for (int i = 1; i <= 25; i++)
         Inputs_Database[i] = 0;

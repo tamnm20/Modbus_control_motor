@@ -23,29 +23,15 @@ typedef struct {
 } MoveTask_t;
 
 static MoveTask_t task = {TASK_IDLE};
-
-/* ========== MODBUS UPDATE (Gọi mỗi 50ms) ========== */
-
-//void Axis_UpdateModbusRegisters(void)
-//{
-//    if(Axis.X.state == MOTOR_IDLE &&
-//       Axis.Y.state == MOTOR_IDLE &&
-//       Axis.Z.state == MOTOR_IDLE)
-//    {
-//        Holding_Registers_Database[0] = (uint16_t)roundf(Axis.X.position);
-//        Holding_Registers_Database[1] = (uint16_t)roundf(Axis.Y.position);
-//        Holding_Registers_Database[2] = (uint16_t)roundf(Axis.Z.position);
-//    }
-//}
-
 /* ========== MOVE TO ========== */
-
 void Axis_MoveTo2D(float x_mm, float y_mm, float feed_mm_s)
 {
-    // Kiểm tra bận
     if (Axis.X.state == MOTOR_BUSY || Axis.Y.state == MOTOR_BUSY)
         return;
-
+//    if(x_mm > X_MAX_MM || y_mm > Y_MAX_MM)
+//    {
+//        return;
+//    }
     int32_t dx_steps = lroundf((x_mm - Axis.X.position) * STEPS_PER_MM);
     int32_t dy_steps = lroundf((y_mm - Axis.Y.position) * STEPS_PER_MM);
 
@@ -54,20 +40,15 @@ void Axis_MoveTo2D(float x_mm, float y_mm, float feed_mm_s)
 
     if (nx == 0 && ny == 0) return;
 
-    // Lưu vị trí bắt đầu
     Axis.X.start_position = Axis.X.position;
     Axis.Y.start_position = Axis.Y.position;
     Axis.X.target_position = x_mm;
     Axis.Y.target_position = y_mm;
 
-    // Set hướng
     uint8_t dir_x = (dx_steps >= 0) ? RIGHT : LEFT;
     uint8_t dir_y = (dy_steps >= 0) ? FORWARD : BACKWARD;
     Set_Dir_X(dir_x);
     Set_Dir_Y(dir_y);
-    Axis.X.direction = dir_x;
-    Axis.Y.direction = dir_y;
-    //HAL_Delay(1);
 
     // Tính tốc độ
     //float dist_mm = sqrtf((float)(dx_steps*dx_steps + dy_steps*dy_steps)) / STEPS_PER_MM;
@@ -100,9 +81,6 @@ void Axis_MoveTo2D(float x_mm, float y_mm, float feed_mm_s)
 
     task.state = TASK_MOVING;
 }
-
-/* axis_task.c */
-
 void Axis_MoveTo(float x_mm, float y_mm, float z_mm, float feed_mm_s)
 {
     // ===== 1. KIỂM TRA TRẠNG THÁI =====
@@ -112,6 +90,11 @@ void Axis_MoveTo(float x_mm, float y_mm, float z_mm, float feed_mm_s)
     {
         return;  // Có trục đang bận
     }
+
+//    if(x_mm > X_MAX_MM || y_mm > Y_MAX_MM || z_mm > Z_MAX_MM)
+//    {
+//        return;
+//    }
 
     // ===== 2. TÍNH TOÁN BƯỚC DI CHUYỂN =====
     int32_t dx_steps = lroundf((x_mm - Axis.X.position) * STEPS_PER_MM);
@@ -143,12 +126,6 @@ void Axis_MoveTo(float x_mm, float y_mm, float z_mm, float feed_mm_s)
     Set_Dir_X(dir_x);
     Set_Dir_Y(dir_y);
     Set_Dir_Z(dir_z);
-
-    Axis.X.direction = dir_x;
-    Axis.Y.direction = dir_y;
-    Axis.Z.direction = dir_z;
-
-    //HAL_Delay(1);
 
     // ===== 5. TÍNH KHOẢNG CÁCH 3D =====
     // dist = sqrt(dx^2 + dy^2 + dz^2)
@@ -197,9 +174,7 @@ void Axis_MoveTo(float x_mm, float y_mm, float z_mm, float feed_mm_s)
     // ===== 10. ĐẶT TRẠNG THÁI MOVING =====
     task.state = TASK_MOVING;
 }
-
 /* ========== JOG  ========== */
-
 void Axis_Jog(AxisName_t axis, uint8_t dir, uint32_t steps, float feed_mm_s)
 {
     ServoMotor_t *m = NULL;
@@ -285,7 +260,6 @@ void Axis_Jog(AxisName_t axis, uint8_t dir, uint32_t steps, float feed_mm_s)
             Set_Dir_Z(dir);
             break;
     }
-    //HAL_Delay(1);
 
     // ===== 6. SAVE START POSITION =====
     m->start_position = m->position;
@@ -312,62 +286,20 @@ void Axis_Jog(AxisName_t axis, uint8_t dir, uint32_t steps, float feed_mm_s)
     Motor_SetFeed(axis, feed_mm_s);
     Motor_Start(axis, steps);
 }
-
 /* ========== TASK UPDATE ========== */
-
-//void Axis_TaskUpdate(void)
-//{
-//    // Kiểm tra hoàn thành
-//    if(task.state == TASK_MOVING)
-//    {
-//        if(Axis.X.state == MOTOR_IDLE && Axis.Y.state == MOTOR_IDLE)
-//        {
-//            Axis.X.position = task.target_x;
-//            Axis.Y.position = task.target_y;
-//            Holding_Registers_Database[0] = (uint16_t)roundf(Axis.X.position);
-//            Holding_Registers_Database[1] = (uint16_t)roundf(Axis.Y.position);
-//            task.state = TASK_IDLE;
-//        }
-//    }
-//
-//    if(Axis.X.state == MOTOR_IDLE && Axis.X.total_steps > 0)
-//    {
-//        Axis.X.position = Axis.X.target_position;
-//        Holding_Registers_Database[0] = (uint16_t)roundf(Axis.X.position);
-//        Axis.X.total_steps = 0;
-//    }
-//
-//    if(Axis.Y.state == MOTOR_IDLE && Axis.Y.total_steps > 0)
-//    {
-//        Axis.Y.position = Axis.Y.target_position;
-//        Holding_Registers_Database[1] = (uint16_t)roundf(Axis.Y.position);
-//        Axis.Y.total_steps = 0;
-//    }
-//
-//    if(Axis.Z.state == MOTOR_IDLE && Axis.Z.total_steps > 0)
-//    {
-//        Axis.Z.position = Axis.Z.target_position;
-//        Holding_Registers_Database[2] = (uint16_t)roundf(Axis.Z.position);
-//        Axis.Z.total_steps = 0;
-//    }
-//}
-
 void Axis_TaskUpdate(void)
 {
-    // Real-time position update khi MOVING
+    // Real-time position update when MOVING
     if(task.state == TASK_MOVING)
     {
-        // Đọc steps đã hoàn thành
         uint32_t done_x = TIM2->CNT;
         uint32_t done_y = TIM5->CNT;
         uint32_t done_z = TIM9->CNT;
 
-        // Tính quãng đường đã đi (mm)
         float moved_x = (float)done_x / STEPS_PER_MM;
         float moved_y = (float)done_y / STEPS_PER_MM;
         float moved_z = (float)done_z / STEPS_PER_MM;
 
-        // Tính toán vị trí hiện tại dựa trên hướng di chuyển
         float cur_x = (Axis.X.direction == RIGHT)
                       ? Axis.X.start_position + moved_x
                       : Axis.X.start_position - moved_x;
@@ -380,12 +312,10 @@ void Axis_TaskUpdate(void)
                       ? Axis.Z.start_position + moved_z
                       : Axis.Z.start_position - moved_z;
 
-        // Theo dõi và cập nhật vị trí theo từng mm
         static float last_update_x = 0.0;
         static float last_update_y = 0.0;
         static float last_update_z = 0.0;
 
-        // Kiểm tra và cập nhật vị trí X
         if(fabsf(cur_x - last_update_x) >= 1.0f)
         {
             last_update_x = cur_x;
@@ -393,7 +323,6 @@ void Axis_TaskUpdate(void)
             Holding_Registers_Database[0] = (uint16_t)roundf(cur_x);
         }
 
-        // Kiểm tra và cập nhật vị trí Y
         if(fabsf(cur_y - last_update_y) >= 1.0f)
         {
             last_update_y = cur_y;
@@ -407,45 +336,55 @@ void Axis_TaskUpdate(void)
             Holding_Registers_Database[2] = (uint16_t)roundf(cur_z);
         }
 
-        // Xác nhận hoàn thành nhiệm vụ di chuyển
         if(Axis.X.state == MOTOR_IDLE && Axis.Y.state == MOTOR_IDLE && Axis.Z.state == MOTOR_IDLE)
         {
-            // Cập nhật vị trí cuối cùng của trục
             Axis.X.position = Axis.X.target_position;
             Axis.Y.position = Axis.Y.target_position;
             Axis.Z.position = Axis.Z.target_position;
             Holding_Registers_Database[0] = (uint16_t)roundf(Axis.X.position);
             Holding_Registers_Database[1] = (uint16_t)roundf(Axis.Y.position);
             Holding_Registers_Database[2] = (uint16_t)roundf(Axis.Z.position);
-
-//            // Đặt lại điểm cập nhật cuối
-//            last_update_x = Axis.X.target_position;
-//            last_update_y = Axis.Y.target_position;
-
-            // Chuyển trạng thái nhiệm vụ về không hoạt động
             task.state = TASK_IDLE;
             return;
         }
     }
-    if(Axis.X.state == MOTOR_IDLE && Axis.X.total_steps > 0)
+    if(Axis.X.state == MOTOR_IDLE)
     {
-        Axis.X.position = Axis.X.target_position;
-        Holding_Registers_Database[0] = (uint16_t)roundf(Axis.X.position);
-        Axis.X.total_steps = 0;
+    	if(Axis.X.total_steps > 0){
+            Axis.X.position = Axis.X.target_position;
+            Holding_Registers_Database[0] = (uint16_t)roundf(Axis.X.position);
+            Axis.X.total_steps = 0;
+    	}
+    	else if(Axis.X.sensor_triggered){
+        	Axis.X.sensor_triggered = 0;
+        	Holding_Registers_Database[0]=0;
+    	}
     }
 
-    if(Axis.Y.state == MOTOR_IDLE && Axis.Y.total_steps > 0)
+    if(Axis.Y.state == MOTOR_IDLE)
     {
-        Axis.Y.position = Axis.Y.target_position;
-        Holding_Registers_Database[1] = (uint16_t)roundf(Axis.Y.position);
-        Axis.Y.total_steps = 0;
+    	if(Axis.Y.total_steps > 0){
+            Axis.Y.position = Axis.Y.target_position;
+            Holding_Registers_Database[1] = (uint16_t)roundf(Axis.Y.position);
+            Axis.Y.total_steps = 0;
+    	}
+    	else if(Axis.Y.sensor_triggered){
+        	Axis.Y.sensor_triggered = 0;
+        	Holding_Registers_Database[1]=0;
+    	}
     }
 
-    if(Axis.Z.state == MOTOR_IDLE && Axis.Z.total_steps > 0)
+    if(Axis.Z.state == MOTOR_IDLE)
     {
-        Axis.Z.position = Axis.Z.target_position;
-        Holding_Registers_Database[2] = (uint16_t)roundf(Axis.Z.position);
-        Axis.Z.total_steps = 0;
+    	if(Axis.Z.total_steps > 0){
+            Axis.Z.position = Axis.Z.target_position;
+            Holding_Registers_Database[2] = (uint16_t)roundf(Axis.Z.position);
+            Axis.Z.total_steps = 0;
+    	}
+    	else if(Axis.Z.sensor_triggered){
+        	Axis.Z.sensor_triggered = 0;
+        	Holding_Registers_Database[2]=0;
+    	}
     }
 }
 

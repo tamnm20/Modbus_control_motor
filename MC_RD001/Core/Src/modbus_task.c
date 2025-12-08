@@ -29,16 +29,14 @@ ActionMap_t motorActionTable[] = {
     { 1 << 5, Handle_Down   },
     { 1 << 6, Handle_Set    },
     { 1 << 7, Handle_Home   },
-};
-ActionMap_t saveActionTable[] = {
-	{ 1 << 0, Handle_GL1   	},
-	{ 1 << 1, Handle_GL2  	},
-    { 1 << 2, Handle_GL3   	},
-    { 1 << 3, Handle_CV1 	},
-    { 1 << 4, Handle_CV2   	},
-    { 1 << 5, Handle_CV3    },
-    { 1 << 6, Handle_GL_save},
-    { 1 << 7, Handle_CV_save},
+	{ 1 << 8, Handle_GL1   	},
+	{ 1 << 9, Handle_GL2  	},
+    { 1 << 10, Handle_GL3   },
+    { 1 << 11, Handle_CV1 	},
+    { 1 << 12, Handle_CV2   },
+    { 1 << 13, Handle_CV3    },
+    { 1 << 14, Handle_GL_save},
+    { 1 << 15, Handle_CV_save},
 };
 ActionMap_t GLActionTable[] = {
 	{ 1 << 0, Handle_Tray1  },
@@ -177,46 +175,15 @@ void Modbus_TaskUpdate(void)
 void Modbus_ExecuteCommands(void)
 {
 	if(Tab->bits.Engine){
-	    uint8_t current = Control_motor->all;
-
-//		for (int i = 0; i < sizeof(motorActionTable)/sizeof(ActionMap_t); i++)
-//		{
-//			if (current & motorActionTable[i].bitMask)
-//			{
-//				motorActionTable[i].handler();
-//				break;
-//			}
-//		}
+		uint16_t current = ((Save_point->all) << 8) | (Control_motor->all);
 	    if (current != 0)
 	    {
 	        int bitIndex = __builtin_ctz(current);
 	        motorActionTable[bitIndex].handler();
 	    }
-		current = Save_point->all;
-//		for (int i = 0; i < sizeof(saveActionTable)/sizeof(ActionMap_t); i++)
-//		{
-//			if (current & saveActionTable[i].bitMask)
-//			{
-//				saveActionTable[i].handler();
-//				break;
-//			}
-//		}
-	    if (current != 0)
-	    {
-	        int bitIndex = __builtin_ctz(current);
-	        saveActionTable[bitIndex].handler();
-	    }
 	}
 	else if(Tab->bits.Home && Home_state->bits.Scan == 0){
 	    uint8_t current = GL_tray->all;
-//		for (int i = 0; i < sizeof(GLActionTable)/sizeof(ActionMap_t); i++)
-//		{
-//			if (current & GLActionTable[i].bitMask)
-//			{
-//				GLActionTable[i].handler();
-//				break;
-//			}
-//		}
 	    if (current != 0)
 	    {
 	        int bitIndex = __builtin_ctz(current);
@@ -265,7 +232,6 @@ void Handle_Down(void)
 	Axis_Jog(AXIS_Z, DOWN, 100, 2000.0f);
 }
 void Handle_Tray1(void){
-	//Home_state->bits.Tray1 = 1;
 	Home_state->all &= ~(0b1111<<2);
 	Home_state->all |= (1<<2);
 	Map_QualityBits_To_Inputs(Glass[0].quality_bits, 7);

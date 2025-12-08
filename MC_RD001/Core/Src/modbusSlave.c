@@ -35,7 +35,7 @@ uint8_t Coils_Database[25]={
 		0b01010100, 0b10011001, 0b11111000, 0b00001101, 0b00101010,    // 160-199 161-200
 };
 
-uint8_t Inputs_Database[50]={0b00000011, };
+uint8_t Inputs_Database[50]={0b00000111, };
 
 void sendData (uint8_t *data, int size)
 {

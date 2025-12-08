@@ -21,7 +21,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//#include "flash.h"
 #include "glass.h"
 /* USER CODE END Includes */
 
@@ -76,25 +75,6 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-// ================== EXTI ISR ==================
-//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-//{
-//    if(GPIO_Pin == HOME_X_Pin)
-//    {
-//        Axis.X.isHomed = 1;
-//        Motor_Stop(AXIS_X);
-//    }
-//    else if(GPIO_Pin == HOME_Y_Pin)
-//    {
-//        Axis.Y.isHomed = 1;
-//        Motor_Stop(AXIS_Y);
-//    }
-//    else if(GPIO_Pin == HOME_Z_Pin)
-//    {
-//        Axis.Z.isHomed = 1;
-//        Motor_Stop(AXIS_Z);
-//    }
-//}
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim == &htim6)  // Timer 10ms
@@ -195,10 +175,8 @@ int main(void)
   HAL_Delay(1000);
   Axis_Init();
   Modbus_TaskInit(&huart1);
-  //LoadCornerData(&cornerData);
-  //Home_All();
+  Home_All();
   PanelScanner_Init();
-  Panel_InitAll();
   Axis_Home();
   while (1)
   {
@@ -251,14 +229,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-#ifdef Tuan_board
   RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 168;
-#endif
-#ifdef Chuc_board
-  RCC_OscInitStruct.PLL.PLLM = 25;
-  RCC_OscInitStruct.PLL.PLLN = 336;
-#endif
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -711,10 +683,10 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(Dir_Z_GPIO_Port, Dir_Z_Pin, GPIO_PIN_RESET);
@@ -724,6 +696,12 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(Dir_X_GPIO_Port, Dir_X_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : Mark_sensor_Pin */
+  GPIO_InitStruct.Pin = Mark_sensor_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Mark_sensor_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Dir_Z_Pin */
   GPIO_InitStruct.Pin = Dir_Z_Pin;

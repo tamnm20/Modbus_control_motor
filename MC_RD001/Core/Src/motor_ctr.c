@@ -16,36 +16,23 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if(GPIO_Pin == HOME_X_Pin)
     {
     	Motor_Stop(AXIS_X);
-//	    HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
-//        HAL_TIM_Base_Stop_IT(&htim2);
     	Axis.X.position = 0.0f;
         Axis.X.sensor_triggered = 1;
     }
     else if(GPIO_Pin == HOME_Y_Pin)
     {
     	Motor_Stop(AXIS_Y);
-//    	HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_1);
-//        HAL_TIM_Base_Stop_IT(&htim5);
     	Axis.Y.position = 0.0f;
         Axis.Y.sensor_triggered = 1;
     }
     else if(GPIO_Pin == HOME_Z_Pin)
     {
     	Motor_Stop(AXIS_Z);
-//    	HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_3);
-//        HAL_TIM_Base_Stop_IT(&htim9);
     	Axis.Z.position = 0.0f;
         Axis.Z.sensor_triggered = 1;
     }
 }
 // ================== INIT ==================
-//void Axis_Init(void)
-//{
-//    Axis.X = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 0, RIGHT};
-//    Axis.Y = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 0, FORWARD};
-//    Axis.Z = (ServoMotor_t){0, MOTOR_IDLE, 0, 0.0f, 0, DOWN};
-//}
-
 void Axis_Init(void)
 {
     // ===== AXIS X =====
@@ -69,7 +56,6 @@ void Axis_Init(void)
         .direction = DOWN
     };
 }
-
 // ================== HOME RESET ==================
 void Axis_Home(void)
 {
@@ -111,9 +97,7 @@ void Motor_SetFeed(AxisName_t axis, float feed_mm_s)
             break;
     }
 }
-
 // ================== MOTOR START ==================
-
 void Motor_Start(AxisName_t axis, uint32_t steps)
 {
     switch (axis)
@@ -149,7 +133,6 @@ void Motor_Start(AxisName_t axis, uint32_t steps)
             break;
     }
 }
-
 // ================== MOTOR STOP ==================
 void Motor_Stop(AxisName_t axis)
 {
@@ -180,9 +163,7 @@ void Motor_Stop(AxisName_t axis)
             break;
     }
 }
-
 // ================== HOME ALL ==================
-
 static void Home_ProcessSensor(AxisName_t axis)
 {
     ServoMotor_t *m;
@@ -206,35 +187,10 @@ static void Home_ProcessSensor(AxisName_t axis)
         return;
 
     m->sensor_triggered = 0;
-
-    // Cleanup counters (PWM đã stop trong ISR)
-//    switch(axis)
-//    {
-//        case AXIS_X:
-//            TIM2->CR1 &= ~TIM_CR1_CEN;
-//            TIM2->CNT = 0;
-//            TIM2->SR = 0;
-//            break;
-//        case AXIS_Y:
-//            TIM5->CR1 &= ~TIM_CR1_CEN;
-//            TIM5->CNT = 0;
-//            TIM5->SR = 0;
-//            break;
-//        case AXIS_Z:
-//            TIM9->CR1 &= ~TIM_CR1_CEN;
-//            TIM9->CNT = 0;
-//            TIM9->SR = 0;
-//            break;
-//    }
-
-//    m->state = MOTOR_IDLE;
-
     // Handle states
     switch(m->homing_state)
     {
         case HOMING_FAST_APPROACH:
-            //HAL_Delay(10);
-
             if(axis == AXIS_X) Set_Dir_X(RIGHT);
             else if(axis == AXIS_Y) Set_Dir_Y(FORWARD);
             else if(axis == AXIS_Z) Set_Dir_Z(DOWN);
@@ -247,11 +203,9 @@ static void Home_ProcessSensor(AxisName_t axis)
             break;
 
         case HOMING_SLOW_APPROACH:
-            //m->isHomed = 1;
             m->homing_state = HOMING_COMPLETE;
             m->position = 0.0f;
             break;
-
         default:
             break;
     }

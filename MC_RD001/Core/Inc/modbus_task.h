@@ -54,10 +54,6 @@ typedef union {
     struct {
     	uint8_t Home :1;
     	uint8_t Engine :1;
-//    	uint8_t Start_state:1;
-//    	uint8_t Start:1;
-//    	uint8_t Scan_state:1;
-//    	uint8_t Scan:1;
         uint8_t reserved : 6;
     } bits;
     uint8_t all;
@@ -93,7 +89,7 @@ typedef union {
 
 typedef void (*Handler_t)(void);
 typedef struct {
-    uint8_t bitMask;
+    uint16_t bitMask;
     Handler_t handler;
 } ActionMap_t;
 

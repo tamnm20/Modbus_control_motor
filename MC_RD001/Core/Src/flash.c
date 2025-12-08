@@ -9,22 +9,8 @@
 #include "motor_ctr.h"
 
 static uint8_t flash_buf[FLASH_CFG_REGION_SIZE];
-//CornerData_t cornerData;
 
-/* ================= CRC32 ================= */
-uint32_t FLASH_CalcCRC32(const void *data, size_t len)
-{
-    const uint8_t *p = (const uint8_t*)data;
-    uint32_t crc = 0xFFFFFFFF;
-    for (size_t i = 0; i < len; ++i) {
-        crc ^= p[i];
-        for (int k = 0; k < 8; k++)
-            crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
-    }
-    return ~crc;
-}
-
-/* ================= Kiểu đơn giản ================= */
+/* ================= Basic ================= */
 bool Flash_EraseSimple(void)
 {
     FLASH_EraseInitTypeDef erase = {
@@ -134,62 +120,9 @@ bool FLASH_Update(uint32_t dest, const void *src, uint32_t numbytes)
     return ok;
 }
 
-
 bool Flash_ReadSimple(uint32_t addr, void *buf, size_t len)
 {
     memcpy(buf, (const void*)addr, len);
-    return true;
-}
-
-/* ================= Kiểu có check (header + CRC) ================= */
-bool Flash_EraseChecked(void)
-{
-    return Flash_EraseSimple();
-}
-
-bool Flash_SaveChecked(const void *data, size_t len)
-{
-    FlashHeader_t hdr;
-    hdr.magic  = FLASH_MAGIC;
-    hdr.length = len;
-    hdr.crc32  = FLASH_CalcCRC32(data, len);
-
-    if (sizeof(hdr) + len > FLASH_USER_SECTOR_SIZE)
-        return false;
-
-    if (!Flash_EraseChecked()) return false;
-
-    HAL_FLASH_Unlock();
-    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_USER_BASE_ADDR, *((uint32_t*)&hdr)) != HAL_OK) {
-        HAL_FLASH_Lock();
-        return false;
-    }
-    /* Ghi toàn bộ header */
-    if (!Flash_WriteSimple(FLASH_USER_BASE_ADDR, &hdr, sizeof(hdr))) {
-        HAL_FLASH_Lock();
-        return false;
-    }
-    /* Ghi payload */
-    if (!Flash_WriteSimple(FLASH_USER_BASE_ADDR + sizeof(hdr), data, len)) {
-        HAL_FLASH_Lock();
-        return false;
-    }
-    HAL_FLASH_Lock();
-    return true;
-}
-
-bool Flash_LoadChecked(void *buf, size_t maxlen, size_t *out_len)
-{
-    const FlashHeader_t *hdr = (const FlashHeader_t*)FLASH_USER_BASE_ADDR;
-    if (hdr->magic != FLASH_MAGIC) return false;
-    if (hdr->length == 0 || hdr->length > maxlen) return false;
-
-    const uint8_t *payload = (const uint8_t*)(FLASH_USER_BASE_ADDR + sizeof(FlashHeader_t));
-    uint32_t crc = FLASH_CalcCRC32(payload, hdr->length);
-    if (crc != hdr->crc32) return false;
-
-    memcpy(buf, payload, hdr->length);
-    if (out_len) *out_len = hdr->length;
     return true;
 }
 
@@ -237,31 +170,76 @@ void Handle_CV3(void)
 }
 void Handle_GL_save(void)
 {
-		Coils_Database[4] &= ~(1 << 6);
-//		uint32_t primask = __get_PRIMASK();
-//		__disable_irq();
-		//Flash_EraseSimple();                                      // erase sector
-		//Flash_WriteSimple(FLASH_USER_BASE_ADDR, &num, sizeof(num)); // program 4 byte
-		FLASH_Update(FLASH_USER_BASE_ADDR, &Holding_Registers_Database[3], 12);
-		//LoadCornerData(Glass->geom);
-//		float readback = 0;
-//		uint16_t rb =0;
-//		float num = Holding_Registers_Database[35];
-//		Flash_ReadSimple(FLASH_USER_BASE_ADDR, &readback, sizeof(readback));
-//		Flash_ReadSimple(FLASH_USER_BASE_ADDR+4, &rb, sizeof(rb));
-//		if (rb == num) {
-//			Test_Database[1]++;
-//			}
-//		else{
-//			Test_Database[1]--;
-//		}
-//		if (primask == 0U) {
-//			__enable_irq();
-//		}
+	Coils_Database[4] &= ~(1 << 6);
+	FLASH_Update(FLASH_USER_BASE_ADDR, &Holding_Registers_Database[3], 12);
 }
 void Handle_CV_save(void)
 {
 	Coils_Database[4] &= ~(1 << 7);
 	FLASH_Update(FLASH_USER_BASE_ADDR+12, &Holding_Registers_Database[9], 12);
 }
+
+///* ================= Save check (header + CRC) ================= */
+///* ================= CRC32 ================= */
+//uint32_t FLASH_CalcCRC32(const void *data, size_t len)
+//{
+//    const uint8_t *p = (const uint8_t*)data;
+//    uint32_t crc = 0xFFFFFFFF;
+//    for (size_t i = 0; i < len; ++i) {
+//        crc ^= p[i];
+//        for (int k = 0; k < 8; k++)
+//            crc = (crc >> 1) ^ (0xEDB88320u & (0u - (crc & 1u)));
+//    }
+//    return ~crc;
+//}
+//bool Flash_EraseChecked(void)
+//{
+//    return Flash_EraseSimple();
+//}
+//
+//bool Flash_SaveChecked(const void *data, size_t len)
+//{
+//    FlashHeader_t hdr;
+//    hdr.magic  = FLASH_MAGIC;
+//    hdr.length = len;
+//    hdr.crc32  = FLASH_CalcCRC32(data, len);
+//
+//    if (sizeof(hdr) + len > FLASH_USER_SECTOR_SIZE)
+//        return false;
+//
+//    if (!Flash_EraseChecked()) return false;
+//
+//    HAL_FLASH_Unlock();
+//    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_USER_BASE_ADDR, *((uint32_t*)&hdr)) != HAL_OK) {
+//        HAL_FLASH_Lock();
+//        return false;
+//    }
+//    /* Ghi toàn bộ header */
+//    if (!Flash_WriteSimple(FLASH_USER_BASE_ADDR, &hdr, sizeof(hdr))) {
+//        HAL_FLASH_Lock();
+//        return false;
+//    }
+//    /* Ghi payload */
+//    if (!Flash_WriteSimple(FLASH_USER_BASE_ADDR + sizeof(hdr), data, len)) {
+//        HAL_FLASH_Lock();
+//        return false;
+//    }
+//    HAL_FLASH_Lock();
+//    return true;
+//}
+//
+//bool Flash_LoadChecked(void *buf, size_t maxlen, size_t *out_len)
+//{
+//    const FlashHeader_t *hdr = (const FlashHeader_t*)FLASH_USER_BASE_ADDR;
+//    if (hdr->magic != FLASH_MAGIC) return false;
+//    if (hdr->length == 0 || hdr->length > maxlen) return false;
+//
+//    const uint8_t *payload = (const uint8_t*)(FLASH_USER_BASE_ADDR + sizeof(FlashHeader_t));
+//    uint32_t crc = FLASH_CalcCRC32(payload, hdr->length);
+//    if (crc != hdr->crc32) return false;
+//
+//    memcpy(buf, payload, hdr->length);
+//    if (out_len) *out_len = hdr->length;
+//    return true;
+//}
 

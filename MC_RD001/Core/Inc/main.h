@@ -64,6 +64,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define Mark_sensor_Pin GPIO_PIN_1
+#define Mark_sensor_GPIO_Port GPIOC
 #define Pulse_Z_Pin GPIO_PIN_0
 #define Pulse_Z_GPIO_Port GPIOB
 #define Dir_Z_Pin GPIO_PIN_1
