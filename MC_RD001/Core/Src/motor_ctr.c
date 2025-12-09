@@ -79,14 +79,18 @@ void Motor_SetFeed(AxisName_t axis, float feed_mm_s)
     switch (axis)
     {
         case AXIS_X:
-            TIM1->ARR  = arr;
-            TIM1->CCR1 = (arr + 1) / 2;
+//            TIM1->ARR  = arr;
+//            TIM1->CCR1 = (arr + 1) / 2;
+            TIM8->ARR  = arr;
+            TIM8->CCR1 = (arr + 1) / 2;
             Axis.X.pulse_freq = f_hz;
             break;
 
         case AXIS_Y:
-            TIM8->ARR  = arr;
-            TIM8->CCR1 = (arr + 1) / 2;
+//            TIM8->ARR  = arr;
+//            TIM8->CCR1 = (arr + 1) / 2;
+            TIM1->ARR  = arr;
+            TIM1->CCR1 = (arr + 1) / 2;
             Axis.Y.pulse_freq = f_hz;
             break;
 
@@ -107,9 +111,12 @@ void Motor_Start(AxisName_t axis, uint32_t steps)
         	    return;
         	if(steps == 0) return;
             Axis.X.state = MOTOR_BUSY;                // mark as busy
-        	htim2.Instance->ARR = steps-1;
-        	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-        	HAL_TIM_Base_Start_IT(&htim2);
+//        	htim2.Instance->ARR = steps-1;
+//        	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+//        	HAL_TIM_Base_Start_IT(&htim2);
+        	htim5.Instance->ARR = steps-1;
+        	HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+        	HAL_TIM_Base_Start_IT(&htim5);
             break;
 
         case AXIS_Y:
@@ -117,9 +124,12 @@ void Motor_Start(AxisName_t axis, uint32_t steps)
         	    return;
         	if(steps == 0) return;
             Axis.Y.state = MOTOR_BUSY;
-        	htim5.Instance->ARR = steps-1;
-        	HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
-        	HAL_TIM_Base_Start_IT(&htim5);
+//        	htim5.Instance->ARR = steps-1;
+//        	HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+//        	HAL_TIM_Base_Start_IT(&htim5);
+        	htim2.Instance->ARR = steps-1;
+        	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+        	HAL_TIM_Base_Start_IT(&htim2);
             break;
 
         case AXIS_Z:
@@ -139,18 +149,26 @@ void Motor_Stop(AxisName_t axis)
     switch (axis)
     {
         case AXIS_X:
-		    HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
-            HAL_TIM_Base_Stop_IT(&htim2);
-            TIM2->CNT = 0;
-            TIM2->SR = 0;
-		    Axis.X.state = MOTOR_IDLE;
-            break;
-
-        case AXIS_Y:
+//		    HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+//            HAL_TIM_Base_Stop_IT(&htim2);
+//            TIM2->CNT = 0;
+//            TIM2->SR = 0;
         	HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_1);
             HAL_TIM_Base_Stop_IT(&htim5);
             TIM5->CNT = 0;
             TIM5->SR = 0;
+		    Axis.X.state = MOTOR_IDLE;
+            break;
+
+        case AXIS_Y:
+//        	HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_1);
+//            HAL_TIM_Base_Stop_IT(&htim5);
+//            TIM5->CNT = 0;
+//            TIM5->SR = 0;
+		    HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
+            HAL_TIM_Base_Stop_IT(&htim2);
+            TIM2->CNT = 0;
+            TIM2->SR = 0;
         	Axis.Y.state = MOTOR_IDLE;
             break;
 
@@ -246,7 +264,7 @@ static void Home_StateMachine(AxisName_t axis)
                 if(axis == AXIS_X) Set_Dir_X(RIGHT);
                 else if(axis == AXIS_Y) Set_Dir_Y(FORWARD);
                 else if(axis == AXIS_Z) Set_Dir_Z(DOWN);
-                HAL_Delay(1);
+                //HAL_Delay(1);
 
                 Motor_SetFeed(axis, HOMING_FAST_FEED);  // 2kHz
                 Motor_Start(axis, HOMING_BACKOFF_STEPS); // 1000 steps
@@ -258,7 +276,7 @@ static void Home_StateMachine(AxisName_t axis)
                 if(axis == AXIS_X) Set_Dir_X(LEFT);
                 else if(axis == AXIS_Y) Set_Dir_Y(BACKWARD);
                 else if(axis == AXIS_Z) Set_Dir_Z(UP);
-                HAL_Delay(1);
+                //HAL_Delay(1);
 
                 Motor_SetFeed(axis, HOMING_FAST_FEED);
                 Motor_Start(axis, 0xFFFFFFFF);

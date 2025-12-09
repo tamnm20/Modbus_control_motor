@@ -28,10 +28,10 @@ void Axis_MoveTo2D(float x_mm, float y_mm, float feed_mm_s)
 {
     if (Axis.X.state == MOTOR_BUSY || Axis.Y.state == MOTOR_BUSY)
         return;
-//    if(x_mm > X_MAX_MM || y_mm > Y_MAX_MM)
-//    {
-//        return;
-//    }
+    if(x_mm > X_MAX_MM || y_mm > Y_MAX_MM)
+    {
+        return;
+    }
     int32_t dx_steps = lroundf((x_mm - Axis.X.position) * STEPS_PER_MM);
     int32_t dy_steps = lroundf((y_mm - Axis.Y.position) * STEPS_PER_MM);
 
@@ -91,10 +91,10 @@ void Axis_MoveTo(float x_mm, float y_mm, float z_mm, float feed_mm_s)
         return;  // Có trục đang bận
     }
 
-//    if(x_mm > X_MAX_MM || y_mm > Y_MAX_MM || z_mm > Z_MAX_MM)
-//    {
-//        return;
-//    }
+    if(x_mm > X_MAX_MM || y_mm > Y_MAX_MM || z_mm > Z_MAX_MM)
+    {
+        return;
+    }
 
     // ===== 2. TÍNH TOÁN BƯỚC DI CHUYỂN =====
     int32_t dx_steps = lroundf((x_mm - Axis.X.position) * STEPS_PER_MM);
@@ -292,8 +292,10 @@ void Axis_TaskUpdate(void)
     // Real-time position update when MOVING
     if(task.state == TASK_MOVING)
     {
-        uint32_t done_x = TIM2->CNT;
-        uint32_t done_y = TIM5->CNT;
+//        uint32_t done_x = TIM2->CNT;
+//        uint32_t done_y = TIM5->CNT;
+        uint32_t done_y = TIM2->CNT;
+        uint32_t done_x = TIM5->CNT;
         uint32_t done_z = TIM9->CNT;
 
         float moved_x = (float)done_x / STEPS_PER_MM;

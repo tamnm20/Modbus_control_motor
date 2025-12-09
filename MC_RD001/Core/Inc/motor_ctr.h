@@ -12,15 +12,38 @@
 #include "stm32f4xx_hal.h"
 #include <math.h>
 
-#define HOME_X_Pin GPIO_PIN_8
-#define HOME_X_GPIO_Port GPIOD
-#define HOME_X_EXTI_IRQn EXTI9_5_IRQn
-#define HOME_Y_Pin GPIO_PIN_9
-#define HOME_Y_GPIO_Port GPIOD
-#define HOME_Y_EXTI_IRQn EXTI9_5_IRQn
-#define HOME_Z_Pin GPIO_PIN_10
-#define HOME_Z_GPIO_Port GPIOD
+//#define HOME_X_Pin GPIO_PIN_8
+//#define HOME_X_GPIO_Port GPIOD
+//#define HOME_X_EXTI_IRQn EXTI9_5_IRQn
+//#define HOME_Y_Pin GPIO_PIN_9
+//#define HOME_Y_GPIO_Port GPIOD
+//#define HOME_Y_EXTI_IRQn EXTI9_5_IRQn
+//#define HOME_Z_Pin GPIO_PIN_10
+//#define HOME_Z_GPIO_Port GPIOD
+//#define HOME_Z_EXTI_IRQn EXTI15_10_IRQn
+
+#define HOME_X_Pin GPIO_PIN_13
+#define HOME_X_GPIO_Port GPIOE
+#define HOME_X_EXTI_IRQn EXTI15_10_IRQn
+#define HOME_Y_Pin GPIO_PIN_14
+#define HOME_Y_GPIO_Port GPIOE
+#define HOME_Y_EXTI_IRQn EXTI15_10_IRQn
+#define HOME_Z_Pin GPIO_PIN_15
+#define HOME_Z_GPIO_Port GPIOE
 #define HOME_Z_EXTI_IRQn EXTI15_10_IRQn
+#define Pulse_X_Pin GPIO_PIN_6
+#define Pulse_X_GPIO_Port GPIOC
+#define Dir_X_Pin GPIO_PIN_7
+#define Dir_X_GPIO_Port GPIOC
+#define Pulse_Z_Pin GPIO_PIN_8
+#define Pulse_Z_GPIO_Port GPIOC
+#define Dir_Z_Pin GPIO_PIN_9
+#define Dir_Z_GPIO_Port GPIOC
+#define Pulse_Y_Pin GPIO_PIN_8
+#define Pulse_Y_GPIO_Port GPIOA
+#define Dir_Y_Pin GPIO_PIN_9
+#define Dir_Y_GPIO_Port GPIOA
+
 
 // ===== CONFIG =====
 #define STEPS_PER_MM 1u
@@ -103,26 +126,26 @@ extern TIM_HandleTypeDef htim9;
 #define Motor_Start_Y(steps)    Motor_Start(AXIS_Y, steps)
 #define Motor_Start_Z(steps)    Motor_Start(AXIS_Z, steps)
 
-static inline void gpio_set(GPIO_TypeDef *port, uint8_t pin) { port->BSRR = (1u << pin); }
-static inline void gpio_clr(GPIO_TypeDef *port, uint8_t pin) { port->BSRR = (1u << (pin + 16)); }
+static inline void gpio_set(GPIO_TypeDef *port, short unsigned int pin) { port->BSRR = (1u << pin); }
+static inline void gpio_clr(GPIO_TypeDef *port, short unsigned int pin) { port->BSRR = (1u << (pin + 16)); }
 
 // ===== INLINE DIR CONTROL =====
 static inline void Set_Dir_X(uint8_t dir) {
     Axis.X.direction = dir;
-    if (dir != RIGHT) gpio_set(GPIOC, 7);
-    else gpio_clr(GPIOC, 7);
+    if (dir != RIGHT) gpio_set(Dir_X_GPIO_Port, Dir_X_Pin);
+    else gpio_clr(Dir_X_GPIO_Port, Dir_X_Pin);
 }
 
 static inline void Set_Dir_Y(uint8_t dir) {
     Axis.Y.direction = dir;
-    if (dir != FORWARD) gpio_set(GPIOD, 15);
-    else gpio_clr(GPIOD, 15);
+    if (dir != FORWARD) gpio_set(Dir_Y_GPIO_Port, Dir_Y_Pin);
+    else gpio_clr(Dir_Y_GPIO_Port, Dir_Y_Pin);
 }
 
 static inline void Set_Dir_Z(uint8_t dir) {
     Axis.Z.direction = dir;
-    if (dir != DOWN) gpio_set(GPIOB, 1);
-    else gpio_clr(GPIOB, 1);
+    if (dir != DOWN) gpio_set(Dir_Z_GPIO_Port, Dir_Z_Pin);
+    else gpio_clr(Dir_Z_GPIO_Port, Dir_Z_Pin);
 }
 
 // ===== PROTOTYPES =====
@@ -135,7 +158,7 @@ void Motor_Stop(AxisName_t axis);
 
 void Home_All(void);
 
-void Axis_UpdateState(AxisName_t axis, uint8_t dir, float feed_mm_s);
-void Axis_MoveStep(AxisName_t axis, uint8_t dir, uint32_t steps, float feed_mm_s);
+//void Axis_UpdateState(AxisName_t axis, uint8_t dir, float feed_mm_s);
+//void Axis_MoveStep(AxisName_t axis, uint8_t dir, uint32_t steps, float feed_mm_s);
 
 #endif /* INC_MOTOR_CTR_H_ */

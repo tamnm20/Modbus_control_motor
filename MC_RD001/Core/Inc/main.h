@@ -66,27 +66,27 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define Mark_sensor_Pin GPIO_PIN_1
 #define Mark_sensor_GPIO_Port GPIOC
-#define Pulse_Z_Pin GPIO_PIN_0
-#define Pulse_Z_GPIO_Port GPIOB
-#define Dir_Z_Pin GPIO_PIN_1
-#define Dir_Z_GPIO_Port GPIOB
-#define HOME_X_Pin GPIO_PIN_8
-#define HOME_X_GPIO_Port GPIOD
-#define HOME_X_EXTI_IRQn EXTI9_5_IRQn
-#define HOME_Y_Pin GPIO_PIN_9
-#define HOME_Y_GPIO_Port GPIOD
-#define HOME_Y_EXTI_IRQn EXTI9_5_IRQn
-#define HOME_Z_Pin GPIO_PIN_10
-#define HOME_Z_GPIO_Port GPIOD
-#define HOME_Z_EXTI_IRQn EXTI15_10_IRQn
-#define Dir_Y_Pin GPIO_PIN_15
-#define Dir_Y_GPIO_Port GPIOD
-#define Pulse_Y_Pin GPIO_PIN_6
-#define Pulse_Y_GPIO_Port GPIOC
-#define Dir_X_Pin GPIO_PIN_7
-#define Dir_X_GPIO_Port GPIOC
-#define Pulse_X_Pin GPIO_PIN_8
-#define Pulse_X_GPIO_Port GPIOA
+//#define HOME_X_Pin GPIO_PIN_13
+//#define HOME_X_GPIO_Port GPIOE
+//#define HOME_X_EXTI_IRQn EXTI15_10_IRQn
+//#define HOME_Y_Pin GPIO_PIN_14
+//#define HOME_Y_GPIO_Port GPIOE
+//#define HOME_Y_EXTI_IRQn EXTI15_10_IRQn
+//#define HOME_Z_Pin GPIO_PIN_15
+//#define HOME_Z_GPIO_Port GPIOE
+//#define HOME_Z_EXTI_IRQn EXTI15_10_IRQn
+//#define Pulse_X_Pin GPIO_PIN_6
+//#define Pulse_X_GPIO_Port GPIOC
+//#define Dir_X_Pin GPIO_PIN_7
+//#define Dir_X_GPIO_Port GPIOC
+//#define Pulse_Z_Pin GPIO_PIN_8
+//#define Pulse_Z_GPIO_Port GPIOC
+//#define Dir_Z_Pin GPIO_PIN_9
+//#define Dir_Z_GPIO_Port GPIOC
+//#define Pulse_Y_Pin GPIO_PIN_8
+//#define Pulse_Y_GPIO_Port GPIOA
+//#define Dir_Y_Pin GPIO_PIN_9
+//#define Dir_Y_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

@@ -12,7 +12,7 @@
 PanelPacked_t Glass[PANEL_COUNT];
 C_CornerData_t cover;
 static PanelScanner_t scanner = {0};
-#define STABLE_DELAY_MS  100
+#define STABLE_DELAY_MS  200
 #define SENSOR_TIMEOUT_MS 100
 #define DISTANCE_SHEET 8175
 
@@ -164,15 +164,21 @@ Point2D_t Panel_GetCellCenter(const PanelPacked_t *p, uint8_t i, uint8_t j)
 
 static bool Sensor_ReadQuality(void)
 {
-    // Linear Congruential Generator (LCG)
-    static uint32_t seed = 1234567;
-    seed = seed * 1103515245 + 12345;
-
-    uint32_t rnd = (seed >> 16) & 0xFFFF;   // lấy 16-bit random
-    rnd = rnd % 100;                        // thu về 0..99
-
-    // 95% → trả về 0, 5% → trả về 1
-    return (rnd < 5) ? 1 : 0;
+//    // Linear Congruential Generator (LCG)
+//    static uint32_t seed = 1234567;
+//    seed = seed * 1103515245 + 12345;
+//
+//    uint32_t rnd = (seed >> 16) & 0xFFFF;   // lấy 16-bit random
+//    rnd = rnd % 100;                        // thu về 0..99
+//
+//    // 95% → trả về 0, 5% → trả về 1
+//    return (rnd < 5) ? 1 : 0;
+    if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1) == GPIO_PIN_SET){
+    	return 1;
+    }
+    else{
+    	return 0;
+    }
 }
 
 /* ========================================
