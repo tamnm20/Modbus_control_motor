@@ -12,16 +12,6 @@
 #include "stm32f4xx_hal.h"
 #include <math.h>
 
-//#define HOME_X_Pin GPIO_PIN_8
-//#define HOME_X_GPIO_Port GPIOD
-//#define HOME_X_EXTI_IRQn EXTI9_5_IRQn
-//#define HOME_Y_Pin GPIO_PIN_9
-//#define HOME_Y_GPIO_Port GPIOD
-//#define HOME_Y_EXTI_IRQn EXTI9_5_IRQn
-//#define HOME_Z_Pin GPIO_PIN_10
-//#define HOME_Z_GPIO_Port GPIOD
-//#define HOME_Z_EXTI_IRQn EXTI15_10_IRQn
-
 #define HOME_X_Pin GPIO_PIN_13
 #define HOME_X_GPIO_Port GPIOE
 #define HOME_X_EXTI_IRQn EXTI15_10_IRQn
@@ -126,26 +116,26 @@ extern TIM_HandleTypeDef htim9;
 #define Motor_Start_Y(steps)    Motor_Start(AXIS_Y, steps)
 #define Motor_Start_Z(steps)    Motor_Start(AXIS_Z, steps)
 
-static inline void gpio_set(GPIO_TypeDef *port, short unsigned int pin) { port->BSRR = (1u << pin); }
-static inline void gpio_clr(GPIO_TypeDef *port, short unsigned int pin) { port->BSRR = (1u << (pin + 16)); }
+static inline void gpio_set(GPIO_TypeDef *port, uint8_t pin) { port->BSRR = (1u << pin); }
+static inline void gpio_clr(GPIO_TypeDef *port, uint8_t pin) { port->BSRR = (1u << (pin + 16)); }
 
 // ===== INLINE DIR CONTROL =====
 static inline void Set_Dir_X(uint8_t dir) {
     Axis.X.direction = dir;
-    if (dir != RIGHT) gpio_set(Dir_X_GPIO_Port, Dir_X_Pin);
-    else gpio_clr(Dir_X_GPIO_Port, Dir_X_Pin);
+    if (dir != RIGHT) gpio_set(Dir_X_GPIO_Port, 7);
+    else gpio_clr(Dir_X_GPIO_Port, 7);
 }
 
 static inline void Set_Dir_Y(uint8_t dir) {
     Axis.Y.direction = dir;
-    if (dir != FORWARD) gpio_set(Dir_Y_GPIO_Port, Dir_Y_Pin);
-    else gpio_clr(Dir_Y_GPIO_Port, Dir_Y_Pin);
+    if (dir != FORWARD) gpio_set(Dir_Y_GPIO_Port, 9);
+    else gpio_clr(Dir_Y_GPIO_Port, 9);
 }
 
 static inline void Set_Dir_Z(uint8_t dir) {
     Axis.Z.direction = dir;
-    if (dir != DOWN) gpio_set(Dir_Z_GPIO_Port, Dir_Z_Pin);
-    else gpio_clr(Dir_Z_GPIO_Port, Dir_Z_Pin);
+    if (dir != DOWN) gpio_set(Dir_Z_GPIO_Port, 9);
+    else gpio_clr(Dir_Z_GPIO_Port, 9);
 }
 
 // ===== PROTOTYPES =====

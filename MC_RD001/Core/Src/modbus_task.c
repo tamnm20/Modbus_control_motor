@@ -206,6 +206,8 @@ void Handle_Home(void)
 {
     Coils_Database[1] &= ~(1 << 7);
     Axis_MoveTo(0, 0, 0, 10000.0f);
+//    Axis_Init();
+//    Home_All();
 }
 void Handle_Left(void)
 {

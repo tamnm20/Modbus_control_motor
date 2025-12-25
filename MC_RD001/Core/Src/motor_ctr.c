@@ -16,19 +16,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if(GPIO_Pin == HOME_X_Pin)
     {
     	Motor_Stop(AXIS_X);
-    	Axis.X.position = 0.0f;
+    	//Axis.X.position = 0.0f;
         Axis.X.sensor_triggered = 1;
     }
     else if(GPIO_Pin == HOME_Y_Pin)
     {
     	Motor_Stop(AXIS_Y);
-    	Axis.Y.position = 0.0f;
+    	//Axis.Y.position = 0.0f;
         Axis.Y.sensor_triggered = 1;
     }
     else if(GPIO_Pin == HOME_Z_Pin)
     {
     	Motor_Stop(AXIS_Z);
-    	Axis.Z.position = 0.0f;
+    	//Axis.Z.position = 0.0f;
         Axis.Z.sensor_triggered = 1;
     }
 }
@@ -345,4 +345,5 @@ void Home_All(void)
     Axis.Y.sensor_triggered = 0;
     Axis.Z.sensor_triggered = 0;
     HAL_Delay(10);
+    HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
 }

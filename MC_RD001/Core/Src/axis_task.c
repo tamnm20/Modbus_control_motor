@@ -357,10 +357,10 @@ void Axis_TaskUpdate(void)
             Holding_Registers_Database[0] = (uint16_t)roundf(Axis.X.position);
             Axis.X.total_steps = 0;
     	}
-    	else if(Axis.X.sensor_triggered){
-        	Axis.X.sensor_triggered = 0;
-        	Holding_Registers_Database[0]=0;
-    	}
+//    	else if(Axis.X.sensor_triggered){
+//        	Axis.X.sensor_triggered = 0;
+//        	Holding_Registers_Database[0]=0;
+//    	}
     }
 
     if(Axis.Y.state == MOTOR_IDLE)
@@ -370,10 +370,10 @@ void Axis_TaskUpdate(void)
             Holding_Registers_Database[1] = (uint16_t)roundf(Axis.Y.position);
             Axis.Y.total_steps = 0;
     	}
-    	else if(Axis.Y.sensor_triggered){
-        	Axis.Y.sensor_triggered = 0;
-        	Holding_Registers_Database[1]=0;
-    	}
+//    	else if(Axis.Y.sensor_triggered){
+//        	Axis.Y.sensor_triggered = 0;
+//        	Holding_Registers_Database[1]=0;
+//    	}
     }
 
     if(Axis.Z.state == MOTOR_IDLE)
@@ -383,10 +383,10 @@ void Axis_TaskUpdate(void)
             Holding_Registers_Database[2] = (uint16_t)roundf(Axis.Z.position);
             Axis.Z.total_steps = 0;
     	}
-    	else if(Axis.Z.sensor_triggered){
-        	Axis.Z.sensor_triggered = 0;
-        	Holding_Registers_Database[2]=0;
-    	}
+//    	else if(Axis.Z.sensor_triggered){
+//        	Axis.Z.sensor_triggered = 0;
+//        	Holding_Registers_Database[2]=0;
+//    	}
     }
 }
 

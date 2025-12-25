@@ -176,42 +176,42 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_Delay(1000);
-//  Axis_Init();
-//  Modbus_TaskInit(&huart2);
-//  Home_All();
-//  PanelScanner_Init();
-//  Axis_Home();
+  Axis_Init();
+  Modbus_TaskInit(&huart2);
+  Home_All();
+  PanelScanner_Init();
+  Axis_Home();
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  Motor_SetFeed_X(10000.0f);
-	  Set_Dir_X(RIGHT);
-	  Motor_Start_X(10000);
-	  Motor_SetFeed_Y(10000.0f);
-	  Set_Dir_Y(FORWARD);
-	  Motor_Start_Y(10000);
-	  Motor_SetFeed_Z(2000.0f);
-	  Set_Dir_Z(DOWN);
-	  Motor_Start_Z(10000);
-	  HAL_Delay(2000);
-
-	  Set_Dir_X(LEFT);
-	  Motor_Start_X(10000);
-	  Set_Dir_Y(BACKWARD);
-	  Motor_Start_Y(10000);
-	  Set_Dir_Z(UP);
-	  Motor_Start_Z(10000);
-	  HAL_Delay(2000);
-//      if(flag_10ms)
-//      {
-//          flag_10ms = 0;
-//          Modbus_TaskUpdate();
-//          PanelScanner_Update();
-//		  Modbus_ExecuteCommands();
-////          Axis_TaskUpdate();
-//      }
+//	  Motor_SetFeed_X(10000.0f);
+//	  Set_Dir_X(RIGHT);
+//	  Motor_Start_X(10000);
+//	  Motor_SetFeed_Y(10000.0f);
+//	  Set_Dir_Y(FORWARD);
+//	  Motor_Start_Y(10000);
+//	  Motor_SetFeed_Z(2000.0f);
+//	  Set_Dir_Z(DOWN);
+//	  Motor_Start_Z(10000);
+//	  HAL_Delay(2000);
+//
+//	  Set_Dir_X(LEFT);
+//	  Motor_Start_X(10000);
+//	  Set_Dir_Y(BACKWARD);
+//	  Motor_Start_Y(10000);
+//	  Set_Dir_Z(UP);
+//	  Motor_Start_Z(10000);
+//	  HAL_Delay(2000);
+      if(flag_10ms)
+      {
+          flag_10ms = 0;
+          Modbus_TaskUpdate();
+          PanelScanner_Update();
+		  Modbus_ExecuteCommands();
+//          Axis_TaskUpdate();
+      }
 //	#ifndef DEBUG
 //		__WFI();
 //	#endif
