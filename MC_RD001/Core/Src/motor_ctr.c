@@ -259,7 +259,7 @@ static void Home_StateMachine(AxisName_t axis)
     switch(m->homing_state)
     {
         case HOMING_INITIAL_CHECK:
-            if(HAL_GPIO_ReadPin(gpio_port, gpio_pin) == GPIO_PIN_RESET)
+            if(HAL_GPIO_ReadPin(gpio_port, gpio_pin) == GPIO_PIN_SET)
             {
                 if(axis == AXIS_X) Set_Dir_X(RIGHT);
                 else if(axis == AXIS_Y) Set_Dir_Y(FORWARD);

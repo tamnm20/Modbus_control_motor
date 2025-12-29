@@ -51,9 +51,10 @@ TIM_HandleTypeDef htim9;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-volatile uint8_t flag_1ms = 0;
+volatile uint32_t tick_ms = 0;
 volatile uint8_t flag_10ms = 0;
-volatile uint8_t tick_1ms_counter = 0;
+volatile uint8_t flag_50ms = 0;
+volatile uint8_t flag_1000ms = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,24 +76,14 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if(htim == &htim6)  // Timer 10ms
-	{
+    if (htim == &htim6)
+    {
+        tick_ms++;
 
-		flag_1ms = 1;
-		tick_1ms_counter++;
-		if(tick_1ms_counter >= 10)
-		{
-		  Axis_TaskUpdate();
-			tick_1ms_counter = 0;
-			flag_10ms = 1;
-		}
-	}
-//	if(htim->Instance == TIM5){
-//	  Motor_Stop(AXIS_Y);
-//	}
-//	if(htim->Instance == TIM2){
-//	  Motor_Stop(AXIS_X);
-//	  }
+        if ((tick_ms % 10) == 0)   flag_10ms = 1;
+        if ((tick_ms % 50) == 0)   flag_50ms = 1;
+        if ((tick_ms % 1000) == 0)  flag_1000ms = 1;
+    }
 	if(htim->Instance == TIM5){
 	  Motor_Stop(AXIS_X);
 	}
@@ -103,30 +94,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	  Motor_Stop(AXIS_Z);
 	}
 }
-//#define Motor_Left 	0
-//#define Motor_Right 	1
-//#define Motor_In 		0
-//#define Motor_Out 	1
-//#define Motor_Up 		0
-//#define Motor_Down 	1
-//A8
-//void Move_x(uint32_t pulse,uint8_t dir){
-//	htim2.Instance->ARR = pulse-1;
-//	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-//}
-////C6
-//void Move_y(uint32_t pulse,uint8_t dir){
-//	htim5.Instance->ARR = pulse-1;
-//	HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
-//}
-////C8
-//void Move_z(uint32_t pulse,uint8_t dir){
-//	htim9.Instance->ARR = pulse-1;
-//	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-//}
-////	  Move_x(10,Motor_Left);
-////	  Move_y(10,Motor_In);
-////	  Move_z(15,Motor_Up);
 /* USER CODE END 0 */
 
 /**
@@ -175,7 +142,6 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_Delay(1000);
   Axis_Init();
   Modbus_TaskInit(&huart2);
   Home_All();
@@ -186,35 +152,52 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  Motor_SetFeed_X(10000.0f);
+//	  Motor_SetFeed_X(50000.0f);
 //	  Set_Dir_X(RIGHT);
-//	  Motor_Start_X(10000);
+//	  Motor_Start_X(50000);
 //	  Motor_SetFeed_Y(10000.0f);
 //	  Set_Dir_Y(FORWARD);
 //	  Motor_Start_Y(10000);
-//	  Motor_SetFeed_Z(2000.0f);
+//	  Motor_SetFeed_Z(20000.0f);
 //	  Set_Dir_Z(DOWN);
-//	  Motor_Start_Z(10000);
-//	  HAL_Delay(2000);
+//	  Motor_Start_Z(20000);
+//
+//	  HAL_Delay(1000);
 //
 //	  Set_Dir_X(LEFT);
-//	  Motor_Start_X(10000);
+//	  Motor_Start_X(50000);
 //	  Set_Dir_Y(BACKWARD);
 //	  Motor_Start_Y(10000);
 //	  Set_Dir_Z(UP);
-//	  Motor_Start_Z(10000);
-//	  HAL_Delay(2000);
-      if(flag_10ms)
-      {
-          flag_10ms = 0;
-          Modbus_TaskUpdate();
-          PanelScanner_Update();
-		  Modbus_ExecuteCommands();
-//          Axis_TaskUpdate();
-      }
-//	#ifndef DEBUG
-//		__WFI();
-//	#endif
+//	  Motor_Start_Z(20000);
+//	  HAL_Delay(1000);
+
+
+	if (flag_10ms)
+	{
+		flag_10ms = 0;
+		Axis_TaskUpdate();
+		Modbus_TaskUpdate();
+		PanelScanner_Update();
+		Modbus_ExecuteCommands();
+	}
+//
+//	if (flag_50ms)
+//	{
+//		flag_50ms = 0;
+//		// Task_50ms();
+//	}
+//
+//	if (flag_1000ms)
+//	{
+//		flag_1000ms = 0;
+//	  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);
+//	  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_3);
+//	  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_7);
+//	}
+	//	#ifndef DEBUG
+	//		__WFI();
+	//	#endif
   }
   /* USER CODE END 3 */
 }
@@ -664,12 +647,21 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(PWM_EN_GPIO_Port, PWM_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, Dir_X_Pin|Dir_Z_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(Dir_Y_GPIO_Port, Dir_Y_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
+                          |GPIO_PIN_7, GPIO_PIN_SET);
 
   /*Configure GPIO pin : Mark_sensor_Pin */
   GPIO_InitStruct.Pin = Mark_sensor_Pin;
@@ -679,9 +671,16 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : HOME_X_Pin HOME_Y_Pin HOME_Z_Pin */
   GPIO_InitStruct.Pin = HOME_X_Pin|HOME_Y_Pin|HOME_Z_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PWM_EN_Pin */
+  GPIO_InitStruct.Pin = PWM_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(PWM_EN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Dir_X_Pin Dir_Z_Pin */
   GPIO_InitStruct.Pin = Dir_X_Pin|Dir_Z_Pin;
@@ -696,6 +695,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(Dir_Y_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PD3 PD4 PD5 PD6
+                           PD7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
+                          |GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
