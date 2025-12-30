@@ -21,6 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "motor_ctr.h"
+#include "modbusSlave.h"
+#include "modbus_task.h"
+#include "axis_task.h"
 #include "glass.h"
 /* USER CODE END Includes */
 
@@ -142,11 +146,13 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_Delay(1000);
   Axis_Init();
   Modbus_TaskInit(&huart2);
-  Home_All();
+  //Home_All();
   PanelScanner_Init();
   Axis_Home();
+  //PanelScanner_StartRange(0, 3);
   while (1)
   {
     /* USER CODE END WHILE */
@@ -188,13 +194,13 @@ int main(void)
 //		// Task_50ms();
 //	}
 //
-//	if (flag_1000ms)
-//	{
-//		flag_1000ms = 0;
+	if (flag_1000ms)
+	{
+		flag_1000ms = 0;
 //	  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);
 //	  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_3);
 //	  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_7);
-//	}
+	}
 	//	#ifndef DEBUG
 	//		__WFI();
 	//	#endif
@@ -646,12 +652,12 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(PWM_EN_GPIO_Port, PWM_EN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, PWM_EN_Pin|O10_LED_G_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, Dir_X_Pin|Dir_Z_Pin, GPIO_PIN_RESET);
@@ -660,14 +666,31 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(Dir_Y_GPIO_Port, Dir_Y_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
+  HAL_GPIO_WritePin(GPIOD, O1_Xilanh1_Pin|O2_Xilanh2_Pin|GPIO_PIN_5|GPIO_PIN_6
                           |GPIO_PIN_7, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : Mark_sensor_Pin */
-  GPIO_InitStruct.Pin = Mark_sensor_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, O11_LED_R_Pin|O12_BUZZER_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : I1_Color_Pin I2_Vaccum1_Pin I3_Vaccum2_Pin I4_ALM_X_Pin
+                           I5_ALM_Y_Pin I6_Pressure_Pin */
+  GPIO_InitStruct.Pin = I1_Color_Pin|I2_Vaccum1_Pin|I3_Vaccum2_Pin|I4_ALM_X_Pin
+                          |I5_ALM_Y_Pin|I6_Pressure_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(Mark_sensor_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : I7_L_Door_Pin I8_R_Door_Pin */
+  GPIO_InitStruct.Pin = I7_L_Door_Pin|I8_R_Door_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : I10_Start_Pin I11_Stop_Pin I12_Rsset_Pin */
+  GPIO_InitStruct.Pin = I10_Start_Pin|I11_Stop_Pin|I12_Rsset_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pins : HOME_X_Pin HOME_Y_Pin HOME_Z_Pin */
   GPIO_InitStruct.Pin = HOME_X_Pin|HOME_Y_Pin|HOME_Z_Pin;
@@ -675,12 +698,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PWM_EN_Pin */
-  GPIO_InitStruct.Pin = PWM_EN_Pin;
+  /*Configure GPIO pin : I18_Emergency_Pin */
+  GPIO_InitStruct.Pin = I18_Emergency_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(I18_Emergency_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PWM_EN_Pin O10_LED_G_Pin */
+  GPIO_InitStruct.Pin = PWM_EN_Pin|O10_LED_G_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(PWM_EN_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Dir_X_Pin Dir_Z_Pin */
   GPIO_InitStruct.Pin = Dir_X_Pin|Dir_Z_Pin;
@@ -696,14 +725,21 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(Dir_Y_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PD3 PD4 PD5 PD6
+  /*Configure GPIO pins : O1_Xilanh1_Pin O2_Xilanh2_Pin PD5 PD6
                            PD7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
+  GPIO_InitStruct.Pin = O1_Xilanh1_Pin|O2_Xilanh2_Pin|GPIO_PIN_5|GPIO_PIN_6
                           |GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : O11_LED_R_Pin O12_BUZZER_Pin */
+  GPIO_InitStruct.Pin = O11_LED_R_Pin|O12_BUZZER_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);

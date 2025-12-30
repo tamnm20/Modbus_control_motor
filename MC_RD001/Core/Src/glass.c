@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "glass.h"
 #include "axis_task.h"
+#include "math.h"
 
 PanelPacked_t Glass[PANEL_COUNT];
 C_CornerData_t cover;
@@ -157,8 +158,29 @@ Point2D_t Panel_GetCellCenter(const PanelPacked_t *p, uint8_t i, uint8_t j)
     float x3 = p->geom.glassCorner3.x;
     float y3 = p->geom.glassCorner3.y;
 
-    pt.x = x1 + i * (x2 - x1) / 13.0f + j * (x3 - x1) / 13.0f;
-    pt.y = y1 + i * (y2 - y1) / 13.0f + j * (y3 - y1) / 13.0f;
+//    float ang_X = atan((y2-y1)/(x2-x1));
+//    float ang_Y = atan((x3-x1)/(y3-y1));
+//
+//    pt.x = x1 + i*5.5 * cos(ang_X) + j*5.5* sin(ang_X);
+//    pt.y = y1 + i*5.5 * sin(ang_Y) + j*5.5* cos(ang_Y);
+
+    float vx1 = x2 - x1;
+    float vy1 = y2 - y1;
+    float len1 = sqrt(vx1*vx1 + vy1*vy1);
+    float ux = vx1 / len1;
+    float uy = vy1 / len1;
+
+    float vx2 = x3 - x1;
+    float vy2 = y3 - y1;
+    float len2 = sqrt(vx2*vx2 + vy2*vy2);
+    float vx = vx2 / len2;
+    float vy = vy2 / len2;
+    pt.x = x1 + 5.5f * ( i * ux + j * vx );
+    pt.y = y1 + 5.5f * ( i * uy + j * vy );
+
+
+//    pt.x = x1 + i * (x2 - x1) / 13.0f + j * (x3 - x1) / 13.0f;
+//    pt.y = y1 + i * (y2 - y1) / 13.0f + j * (y3 - y1) / 13.0f;
     return pt;
 }
 
@@ -173,7 +195,7 @@ static bool Sensor_ReadQuality(void)
 //
 //    // 95% → trả về 0, 5% → trả về 1
 //    return (rnd < 5) ? 1 : 0;
-    if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1) == GPIO_PIN_SET){
+    if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0) == GPIO_PIN_SET){
     	return 1;
     }
     else{
@@ -227,7 +249,7 @@ void PanelScanner_StartRange(uint8_t start_tray, uint8_t end_tray)
     // Di chuyển đến cell đầu tiên
     Point2D_t pos = Panel_GetCellCenter(scanner.panel, 0, 0);
     //Axis_MoveTo2D(pos.x, pos.y, 10000.0f);
-    Axis_MoveTo(pos.x, pos.y, 8000, 10000.0f);
+    Axis_MoveTo(pos.x, pos.y, 6500, 10000.0f);
 }
 /* ========================================
  * START SCAN
